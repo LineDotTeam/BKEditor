@@ -15,8 +15,8 @@
 
 #include "resource.h"
 
-#include "aboutdlg.h"
-#include "MainDlg.h"
+#include "about_dlg.h"
+#include "main_dlg.h"
 
 CAppModule _Module;
 
