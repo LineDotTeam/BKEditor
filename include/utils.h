@@ -3,7 +3,7 @@
 #include <string.h>
 #include <Windows.h>
 #include <vector>
-#include "3rdparty\tinyxml-2.6.2\tinyxml.h"
+#include "3rdparty\tinyxml\tinyxml.h"
 
 namespace utils
 {

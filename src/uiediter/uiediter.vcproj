@@ -240,7 +240,27 @@
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
 			<File
-				RelativePath=".\resource.h"
+				RelativePath="..\..\include\global_def.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\singleton.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\utils.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\include\utils.h"
 				>
 			</File>
 		</Filter>
@@ -254,6 +274,10 @@
 			</File>
 			<File
 				RelativePath=".\bkwinres.rc2"
+				>
+			</File>
+			<File
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<File
