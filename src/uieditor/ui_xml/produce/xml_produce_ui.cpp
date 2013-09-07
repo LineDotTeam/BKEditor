@@ -26,5 +26,5 @@ Global::BOOL UIXmlProduce::Produce(const ControlPool& controlpool,
         return FALSE;
     }
 
-    
+    return TRUE;
 }

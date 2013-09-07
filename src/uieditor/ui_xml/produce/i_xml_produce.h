@@ -10,6 +10,7 @@
 
 #include "3rdparty/tinyxml/tinyxml.h"
 #include "include/utils.h"
+#include "include/global_def.h"
 #include <string>
 
 class ControlPool;
