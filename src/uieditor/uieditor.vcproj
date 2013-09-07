@@ -557,6 +557,10 @@
 			Name="source"
 			>
 			<File
+				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -573,108 +577,100 @@
 				>
 			</File>
 			<Filter
-				Name="uieditor_dlg"
+				Name="component"
 				>
 				<File
-					RelativePath=".\main.cpp"
+					RelativePath=".\component\icomponent.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="2"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\component\icomponent.h"
 					>
 				</File>
-				<Filter
-					Name="component"
+				<File
+					RelativePath=".\component\kcomp_button.cpp"
 					>
-					<File
-						RelativePath=".\component\icomponent.cpp"
+					<FileConfiguration
+						Name="Debug|Win32"
 						>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="2"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath=".\component\icomponent.h"
-						>
-					</File>
-					<File
-						RelativePath=".\component\kcomp_button.cpp"
-						>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="2"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath=".\component\kcomp_button.h"
-						>
-					</File>
-					<File
-						RelativePath=".\component\kcomp_img.cpp"
-						>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="2"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath=".\component\kcomp_img.h"
-						>
-					</File>
-					<File
-						RelativePath=".\component\kcomp_imgbtn.cpp"
-						>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="2"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath=".\component\kcomp_imgbtn.h"
-						>
-					</File>
-					<File
-						RelativePath=".\component\kcomp_text.cpp"
-						>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="2"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath=".\component\kcomp_text.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="dialog"
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="2"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\component\kcomp_button.h"
 					>
-					<File
-						RelativePath=".\dialog\uieditor_dlg.cpp"
+				</File>
+				<File
+					RelativePath=".\component\kcomp_img.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
 						>
-					</File>
-					<File
-						RelativePath=".\dialog\uieditor_dlg.h"
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="2"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\component\kcomp_img.h"
+					>
+				</File>
+				<File
+					RelativePath=".\component\kcomp_imgbtn.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
 						>
-					</File>
-				</Filter>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="2"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\component\kcomp_imgbtn.h"
+					>
+				</File>
+				<File
+					RelativePath=".\component\kcomp_text.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="2"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\component\kcomp_text.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="dialog"
+				>
+				<File
+					RelativePath=".\dialog\uieditor_dlg.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\dialog\uieditor_dlg.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 	</Files>
