@@ -1,0 +1,11 @@
+<skins>
+  <png name="btn_submit"   src="2001" subwidth="150"></png>
+  <png name="head_bar"     src="2002"></png>
+  <png name="attrute_bar"  src="2003"></png>
+  <png name="main_palette" src="2004"></png>
+  <png name="btn_close"    src="2005" subwidth="40"></png>
+  <png name="btn_minsize"  src="2006" subwidth="32"></png>
+  <png name="bg_panel"     src="2007"></png>
+  <png name="bg_meng"      src="2008"></png>
+  <png name="btn_delete"   src="2009" subwidth="150"></png>
+</skins>

@@ -1,0 +1,25 @@
+<layer title="Template" height="830" width="1200" resize="1" noborder="1" appwin="1">
+  <header class="header_style" height="30" width="full">
+    <imgbtn id="40004" skin="btn_close" pos="-40,0"></imgbtn>
+    <imgbtn id="40005" skin="btn_minsize" pos="-70,0"></imgbtn>
+  </header>
+  
+  <body class="body_style" height="800" width="1200">
+    <dlg id="40001" pos="0,0,200,-0">
+    
+    </dlg>
+    <imgbtn id="40003" class="button_style" skin="btn_submit" pos="25,650" show="0"/>
+    <imgbtn id="40006" class="button_style" skin="btn_delete" pos="25,700" show="0"/>
+    
+    <dlg id="40002" pos="200,0,1000,-0" onlydrawchild="0">
+
+    </dlg>
+    
+    <dlg pos="1000,0,-0,-0" skin="right_panel">
+      <radio id="50000" group="comp" class="radio_text" pos="20,50,-0,80"  >text</radio>
+      <radio id="50001" group="comp" class="radio_text" pos="20,80,-0,110" >botton</radio>
+      <radio id="50002" group="comp" class="radio_text" pos="20,110,-0,140" >imgbtn</radio>
+      <radio id="50003" group="comp" class="radio_text" pos="20,140,-0,170">img</radio>
+    </dlg>
+  </body>
+</layer>

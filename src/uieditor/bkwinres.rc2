@@ -1,0 +1,27 @@
+#pragma once
+
+//////////////////////////////////////////////////////////////////////////
+///  XML
+///
+DEFINE_XML(XML_BK_MAIN_DEF,         1000,    "res\\kdemo_main.xml")
+DEFINE_XML(XML_BK_SKIN_DEF,         1001,    "res\\kdemo_skin.xml")
+DEFINE_XML(XML_BK_STYLE_DEF,        1002,    "res\\kdemo_style.xml")
+DEFINE_XML(XML_BK_STRING_DEF,       1003,    "res\\kdemo_string.xml")
+
+//////////////////////////////////////////////////////////////////////////
+///  PNG
+///
+DEFINE_PNG(PNG_BTN_SUBMIT,          2001,  "res\\btn_submit.png")
+DEFINE_PNG(PNG_HEAD_BAR,            2002,  "res\\head_bar.png")
+DEFINE_PNG(PNG_ATTRUTE_BAR,         2003,  "res\\attrute_bar.png")
+DEFINE_PNG(PNG_MAIN_PALETTE,        2004,  "res\\main_palette.png")
+DEFINE_PNG(PNG_CLOSE,               2005,  "res\\btn_close.png")
+DEFINE_PNG(PNG_MINSIZE,             2006,  "res\\btn_minsize.png")
+DEFINE_PNG(PNG_BG_PANEL,            2007,  "res\\bg_panel.png")
+DEFINE_PNG(PNG_BG_MENG,             2008,  "res\\bg_meng.png")
+DEFINE_PNG(PNG_BTN_DELETE,          2009,  "res\\btn_delete.png")
+
+//////////////////////////////////////////////////////////////////////////
+///  ICO
+///
+DEFINE_ICO(ICO_DUBA,                6000,  "res\\duba123.ico")
