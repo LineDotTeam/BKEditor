@@ -18,7 +18,7 @@ UIXmlProduce::~UIXmlProduce()
 
 }
 
-Global::BOOL UIXmlProduce::Produce(const ControlPool& controlpool,
+Global::BOOL UIXmlProduce::Produce(const Control::ControlPool& controlpool,
     const std::wstring& strPath)
 {
     if (strPath.empty()

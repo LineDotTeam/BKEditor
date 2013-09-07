@@ -5,10 +5,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "uieditor", "..\src\uieditor
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Console|Win32 = Console|Win32
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E12BF1DB-9770-43BF-9D97-393B1A25D591}.Console|Win32.ActiveCfg = Console|Win32
+		{E12BF1DB-9770-43BF-9D97-393B1A25D591}.Console|Win32.Build.0 = Console|Win32
 		{E12BF1DB-9770-43BF-9D97-393B1A25D591}.Debug|Win32.ActiveCfg = Debug|Win32
 		{E12BF1DB-9770-43BF-9D97-393B1A25D591}.Debug|Win32.Build.0 = Debug|Win32
 		{E12BF1DB-9770-43BF-9D97-393B1A25D591}.Release|Win32.ActiveCfg = Release|Win32

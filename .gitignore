@@ -46,3 +46,4 @@ release
 tool.vcproj
 win32
 win32d
+Console
