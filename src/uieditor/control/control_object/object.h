@@ -10,11 +10,17 @@
 
 #include <atlstr.h>
 #include "include/global_def.h"
+#include "control/control_def.h"
 
 namespace Control
 {
 
-typedef struct _Object
+interface IObject
+{
+    virtual CString ToXml() const = 0;
+};
+
+typedef struct _Object : public IObject
 {
     _Object()
     {
@@ -23,6 +29,12 @@ typedef struct _Object
         nWidth = nHeight = 0;
         bIsVisible = TRUE;
         bIsEnable = TRUE;
+        controlarea = emCONTROLAREA_BODY;
+    }
+
+    virtual CString ToXml() const
+    {
+        return _T("");
     }
 
     Global::Define::uint32 nId;
@@ -31,6 +43,7 @@ typedef struct _Object
     Global::Define::uint32 nY;
     Global::Define::uint32 nWidth;
     Global::Define::uint32 nHeight;
+    ControlArea controlarea;
     Global::BOOL bIsVisible;
     Global::BOOL bIsEnable;
     CString strStyleName;
