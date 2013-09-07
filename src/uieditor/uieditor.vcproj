@@ -740,6 +740,18 @@
 					</File>
 				</Filter>
 			</Filter>
+			<Filter
+				Name="control_tree"
+				>
+				<File
+					RelativePath=".\kcontrol_tree.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\kcontrol_tree.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>
