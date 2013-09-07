@@ -129,7 +129,7 @@ public:
     {
         CStringA strXml;
 
-        BOOL bRet = BkResUtil::LoadBkXmlResource(uResID, strXml);
+        BOOL bRet = BkResManager::LoadResource(uResID, strXml);
 
         if (!bRet)
             return FALSE;
@@ -408,7 +408,7 @@ protected:
             m_imgMem.DeleteObject();
 
         rcClient.MoveToXY(0, 0);
-   //     rcClient.right -= ::GetSystemMetrics(SM_CXVSCROLL);
+        rcClient.right -= ::GetSystemMetrics(SM_CXVSCROLL);
 
 		ModifyStyle(WS_HSCROLL,0);
 

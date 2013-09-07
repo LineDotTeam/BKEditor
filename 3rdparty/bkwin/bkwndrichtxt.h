@@ -14,7 +14,6 @@ public:
         , m_bLinkLoaded(FALSE)
         , m_posHover(NULL)
         , m_posPushDown(NULL)
-		, m_bAdjust(false)
     {
 
     }
@@ -54,7 +53,6 @@ protected:
     {
         __super::OnWindowPosChanged(lpWndPos);
         
-		m_bAdjust = false;
         m_lstLink.RemoveAll();
         m_bLinkLoaded = FALSE;
         m_posHover = NULL;
@@ -62,53 +60,18 @@ protected:
 
     void OnPaint(CDCHandle dc)
     {
-		HFONT hftNew = BkFontPool::GetFont(LOWORD(m_dwFont));
-        HFONT hftOld = dc.SelectFont(hftNew);
+        HFONT hftOld = dc.SelectFont(BkFontPool::GetFont(LOWORD(m_dwFont)));
 
         CRect rcDraw = m_rcWindow;
         CRgn rgnDraw;
 
-        rcDraw.DeflateRect(GetStyle().m_nMarginX, GetStyle().m_nMarginY);
-
-		if (BkFontPool::IsYaHei() && !m_bAdjust)
-		{
-			int nAddSize = BkFontPool::GetFontSizeAdding(hftNew);
-
-			if ((GetStyle().m_nTextAlign & DT_BOTTOM) == DT_BOTTOM)
-			{
-				rcDraw.top -= 3 * (nAddSize + 1); 
-				rcDraw.bottom -= 3 * (nAddSize + 1);
-				int nMinHeight = BkFontPool::GetDefaultFontSize() + nAddSize + 2 * (nAddSize + 2);
-				if (rcDraw.Height() < nMinHeight)
-					rcDraw.bottom += nMinHeight - rcDraw.Height();
-			}
-			else if ((GetStyle().m_nTextAlign & DT_VCENTER) == DT_VCENTER)
-			{
-				rcDraw.top -= 0; 
-				rcDraw.bottom -= 0;
-			}
-			else
-			{
-				rcDraw.top -= 3 * (nAddSize + 1); 
-				rcDraw.bottom -= 3 * (nAddSize + 1);
-			}
-			m_rcWindow = rcDraw; 
-			m_bAdjust = true;
-		}
-
+        rcDraw.DeflateRect(m_style.m_nMarginX, m_style.m_nMarginY);
         rgnDraw.CreateRectRgnIndirect(rcDraw);
 
         int nDC = dc.SaveDC();
         dc.SelectClipRgn(rgnDraw);
 
         POINT pt = rcDraw.TopLeft();
-
-		if (GetStyle().m_nTextAlign & DT_CENTER)
-		{
-			POINT ptEnd = pt;
-			_DrawElement(dc, &m_XmlElemChilds, LOWORD(m_dwFont), ptEnd, TRUE);
-			pt.x += (rcDraw.Width() - (ptEnd.x - pt.x)) / 2;
-		}
 
         _DrawElement(dc, &m_XmlElemChilds, LOWORD(m_dwFont), pt);
 
@@ -208,52 +171,57 @@ protected:
         if (NULL != m_styleLink.m_ftText)
             dc.SelectFont(hftOld);
 
-        if (pt.x + sz.cx > m_rcWindow.right - GetStyle().m_nMarginX)
+        if (pt.x + sz.cx > m_rcWindow.right - m_style.m_nMarginX)
         {
-            pt.x = m_rcWindow.left + GetStyle().m_nMarginX;
-            pt.y += GetStyle().m_nLineSpacing;
+            pt.x = m_rcWindow.left + m_style.m_nMarginX;
+            pt.y += m_style.m_nLineSpacing;
         }
 
         newLink.rcLink.SetRect(pt.x, pt.y, pt.x + sz.cx, pt.y + sz.cy);
 
-        pt.x = newLink.rcLink.right + GetStyle().m_nSpacing;
+        pt.x = newLink.rcLink.right + m_style.m_nSpacing;
 
         pElemChild->Attribute("id", (int *)&newLink.uCmdID);
 
         m_lstLink.AddTail(newLink);
     }
 
-    void _DrawElement(CDCHandle &dc, TiXmlElement *pElemChild, WORD wFont, POINT &pt, BOOL bOnlyCalc = FALSE)
+    void _DrawElement(CDCHandle &dc, TiXmlElement *pElemChild, WORD wFont, POINT &pt)
     {
         TiXmlNode *pNodeChild = NULL;
 
         WORD wNewFont = wFont;
         COLORREF crTextOld = CLR_INVALID;
 
-        BOOL bOnlyCalcPoint = bOnlyCalc;
+        BOOL bOnlyCalcPoint = FALSE;
 
-        if (0 == _stricmp(pElemChild->Value(), "br"))
+        if (0 == stricmp(pElemChild->Value(), "br"))
         {
-            pt.x = m_rcWindow.left + GetStyle().m_nMarginX;
-            pt.y += GetStyle().m_nLineSpacing;
+            pt.x = m_rcWindow.left + m_style.m_nMarginX;
+            pt.y += m_style.m_nLineSpacing;
         }
-        else if (0 == _stricmp(pElemChild->Value(), "b"))
+        else if (0 == stricmp(pElemChild->Value(), "b"))
         {
             wNewFont = wFont | BKF_BOLD;
         }
-        else if (0 == _stricmp(pElemChild->Value(), "i"))
+        else if (0 == stricmp(pElemChild->Value(), "i"))
         {
             wNewFont = wFont | BKF_ITALIC;
         }
-        else if (0 == _stricmp(pElemChild->Value(), "u"))
+        else if (0 == stricmp(pElemChild->Value(), "u"))
         {
             wNewFont = wFont | BKF_UNDERLINE;
         }
-        else if (0 == _stricmp(pElemChild->Value(), "c"))
+        else if (0 == stricmp(pElemChild->Value(), "c"))
         {
-            crTextOld = dc.SetTextColor(CBkObject::HexStringToColor(pElemChild->Attribute("color")));
+			COLORREF clrText = CBkObject::HexStringToColor(pElemChild->Attribute("color"));
+            crTextOld = dc.SetTextColor( clrText );
+			if( crTextOld == CLR_INVALID )
+			{
+				crTextOld = 0;
+			}
         }
-        else if (0 == _stricmp(pElemChild->Value(), "a"))
+        else if (0 == stricmp(pElemChild->Value(), "a"))
         {
             if (!m_bLinkLoaded)
             {
@@ -264,22 +232,10 @@ protected:
 
             bOnlyCalcPoint = TRUE;
         }
-		else if (0 == _stricmp(pElemChild->Value(), "o"))
-		{
-			pt.x += CBkObject::HexStringToULong(pElemChild->Attribute("offset"));
-			if (pt.x > m_rcWindow.right - GetStyle().m_nMarginX)
-			{
-				int nLineLength = m_rcWindow.right - 2*GetStyle().m_nMarginX;
-				int nFlowLen = pt.x - m_rcWindow.right - GetStyle().m_nMarginX;
-				int nLine = (nFlowLen+nLineLength-1)/nLineLength;
-				pt.y += GetStyle().m_nLineSpacing*nLine;
-				pt.x = m_rcWindow.left + GetStyle().m_nMarginX+nFlowLen%nLineLength;
-			}
-		}
 
         dc.SelectFont(BkFontPool::GetFont(wNewFont));
 
-        while (NULL != (pNodeChild = pElemChild->IterateChildren(pNodeChild)))
+        while (pNodeChild = pElemChild->IterateChildren(pNodeChild))
         {
             _DrawNode(dc, pNodeChild, wNewFont, pt, bOnlyCalcPoint);
         }
@@ -348,7 +304,7 @@ protected:
             {
                 TiXmlElement *pElemChild = pNodeChild->ToElement();
 
-                _DrawElement(dc, pElemChild, wFont, pt, bOnlyCalcPoint);
+                _DrawElement(dc, pElemChild, wFont, pt);
             }
             break;
 
@@ -367,7 +323,7 @@ protected:
                     while (nLength > 0)
                     {
                         dc.GetTextExtent(lpszDraw, nLength, &sz);
-                        if (pt.x + sz.cx <= m_rcWindow.right - GetStyle().m_nMarginX)
+                        if (pt.x + sz.cx <= m_rcWindow.right - m_style.m_nMarginX)
                             break;
 
                         nLength --;
@@ -382,12 +338,12 @@ protected:
                         break;
                     }
 
-                    pt.x = m_rcWindow.left + GetStyle().m_nMarginX;
-                    pt.y += GetStyle().m_nLineSpacing;
+                    pt.x = m_rcWindow.left + m_style.m_nMarginX;
+                    pt.y += m_style.m_nLineSpacing;
                     lpszDraw += nLength;
                 }
 
-                pt.x += GetStyle().m_nSpacing;
+                pt.x += m_style.m_nSpacing;
             }
             break;
         }
@@ -401,7 +357,6 @@ protected:
     BOOL m_bLinkLoaded;
     POSITION m_posHover;
     POSITION m_posPushDown;
-	bool m_bAdjust;
 
     class _LinkInfo 
     {

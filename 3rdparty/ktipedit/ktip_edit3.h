@@ -1,7 +1,7 @@
 #ifndef _KTIPEDIT3_H_
 #define _KTIPEDIT3_H_
-#include <atlcrack.h>
-#include <atlctrls.h>
+#include <wtl/atlcrack.h>
+#include <wtl/atlctrls.h>
 
 #define WM_EDIT_KILLFOCUS		(WM_USER + 101)
 #define WM_EDIT_CHANGE			(WM_USER + 102)
@@ -9,6 +9,7 @@
 #define WM_POSTSETFOCUS			(WM_USER + 104)
 #define WM_EDIT_CHANGEFOCUS		(WM_USER + 105)
 #define WM_EDIT_SETFOCUS		(WM_USER + 106)
+#define WM_EDIT_MOVE		    (WM_USER + 107)
 //#define WM_EDIT_KEYDOWN			(WM_USER + 105)
 
 class KEdit3 : public CWindowImpl<KEdit3, CEdit>
@@ -247,6 +248,7 @@ protected:
 			m_ebedEdit.SetPasswordChar(L'¡ñ');
 
 		SetMsgHandled(FALSE);
+        SetTrueEditFocus();
 		return 0;
 	}
 
@@ -294,7 +296,8 @@ protected:
 
 	void OnLButtonDown(UINT nFlags, CPoint point)
 	{
-		SetTrueEditFocus();
+        SendMessage(m_hNotify, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, NULL);
+        SetTrueEditFocus();
 	}
 
 	LRESULT OnEditChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)

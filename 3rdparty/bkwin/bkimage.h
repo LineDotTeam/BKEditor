@@ -16,9 +16,11 @@
 
 #pragma once
 
-// #include <bkres/bkbmppool.h>
+#include <bkres/bkbmppool.h>
 
-#define abs(value) ((value) >= 0 ? (value) : -(value))
+// 原先的定义为：#define abs(value) (value >= 0 ? value : -value)
+// 这个宏定义是有bug的。 但value为 2-3时  实际的代码变为  2-3 >= 0 ? 2-3:-2-3  导致abs取到一个负数
+#define abs(value) (value >= 0 ? value : -(value))
 
 #ifdef __AFXWIN_H__ // If MFC
     #define M_HOBJECT m_hObject
@@ -123,12 +125,12 @@ public:
         return( *this );
     }
 
-//     CBkImage& operator=( __in const UINT uResID)
-//     {
-//         Attach(BkBmpPool::GetBitmap(uResID));
-// 
-//         return( *this );
-//     }
+    CBkImage& operator=( __in const UINT uResID)
+    {
+        Attach(BkBmpPool::GetBitmap(uResID));
+
+        return( *this );
+    }
 
     BOOL GetImageSize(SIZE &sizeImage)
     {
@@ -166,18 +168,18 @@ public:
         m_crMask = crMask;
     }
 
-//     BOOL LoadDIBSection(UINT nIDResource, HINSTANCE hInst = (HINSTANCE)&__ImageBase)
-//     {
-//         HGDIOBJ hLoad = ::LoadImage(hInst, MAKEINTRESOURCE(nIDResource), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-//         BOOL bResult = FALSE;
-//         
-//         if (!hLoad)
-//             return FALSE;
-// 
-//         Attach((HBITMAP)hLoad);
-// 
-//         return bResult;
-//     }
+    BOOL LoadDIBSection(UINT nIDResource, HINSTANCE hInst = (HINSTANCE)&__ImageBase)
+    {
+        HGDIOBJ hLoad = ::LoadImage(hInst, MAKEINTRESOURCE(nIDResource), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+        BOOL bResult = FALSE;
+        
+        if (!hLoad)
+            return FALSE;
+
+        Attach((HBITMAP)hLoad);
+
+        return bResult;
+    }
 
     BOOL LoadDIBSectionFromFile(LPCTSTR lpszFileName)
     {
@@ -195,18 +197,7 @@ public:
     BOOL CreateBitmap(int nWidth, int nHeight, COLORREF crBackground = CLR_INVALID)
     {
         HDC hDCDesktop = ::GetDC(NULL);
-		BYTE* pBits = NULL;
-		BITMAPINFOHEADER bmih;
-		ZeroMemory(&bmih, sizeof(BITMAPINFOHEADER));
-
-		bmih.biSize = sizeof(BITMAPINFOHEADER);
-		bmih.biWidth = nWidth;
-		bmih.biHeight = nHeight;
-		bmih.biPlanes = 1;
-		bmih.biBitCount = 32;
-		bmih.biCompression = BI_RGB;
-		HBITMAP hBmpCreate = CreateDIBSection(NULL, (BITMAPINFO *) &bmih, 0, (VOID**)&pBits, NULL, 0);
-
+        HBITMAP hBmpCreate = ::CreateCompatibleBitmap(hDCDesktop, nWidth, nHeight);
 
         Attach(hBmpCreate);
 
@@ -378,6 +369,7 @@ public:
         return bResult;
     }
 
+
 	BOOL Draw2(HDC hDC, int nPosX, int nPosY, int cx, int cy, int nSubImage = -1/* All */)
 	{
 		BOOL bResult = FALSE;
@@ -385,13 +377,19 @@ public:
 		HDC hDCDesktop = NULL, hDCSrc = NULL;
 		BITMAP bmp;
 		HGDIOBJ hbmpOld = NULL;
+
 		BLENDFUNCTION fnBlend = {AC_SRC_OVER, 0, 0xFF, AC_SRC_ALPHA};
+
 		if (NULL == M_HOBJECT)
 			goto Exit0;
+
 		if (0 == m_lSubImageWidth && -1 != nSubImage)
 			goto Exit0;
+
 		GetBitmap(&bmp);
+
 		nDrawHeight = cy;
+
 		if (-1 == nSubImage)
 		{
 			nDrawWidth = cx;
@@ -401,38 +399,56 @@ public:
 			nDrawWidth = m_lSubImageWidth;
 			nSrcPosX = nSubImage * m_lSubImageWidth;
 		}
+
 		if (ModeAlpha == m_nTransparentMode)
 		{
+			//_PreAlphaBlend((HBITMAP)m_hObject);
+
 			bResult = AlphaBlend(hDC, nPosX, nPosY, nDrawWidth, nDrawHeight, (HBITMAP)M_HOBJECT, nSrcPosX, nSrcPosY);
+
 			goto Exit0;
 		}
+
 		hDCDesktop = ::GetDC(NULL);
 		hDCSrc = ::CreateCompatibleDC(hDCDesktop);
 		::ReleaseDC(NULL, hDCDesktop);
+
 		hbmpOld = ::SelectObject(hDCSrc, M_HOBJECT);
+
 		switch (m_nTransparentMode)
 		{
 		case ModeNone:
 			bResult = ::BitBlt(hDC, nPosX, nPosY, nDrawWidth, nDrawHeight, hDCSrc, nSrcPosX, nSrcPosY, SRCCOPY);
 			break;
+
 		case ModeMaskColor:
 			bResult = TransparentBlt2(hDC, nPosX, nPosY, nDrawWidth, nDrawHeight, hDCSrc, nSrcPosX, nSrcPosY, nDrawWidth, nDrawHeight, m_crMask);
 			break;
 		case ModeAlpha:
+			// API AlphaBlend因为预乘，所以颜色会有所损失，干脆自己写了一个
+			//::AlphaBlend(hDC, nPosX, nPosY, nDrawWidth, nDrawHeight, hDCSrc, nSrcPosX, nSrcPosY, nDrawWidth, nDrawHeight, fnBlend);
 			break;
+
 		default:
 			bResult = FALSE;
+
 			break;
 		}
+
 		::SelectObject(hDCSrc, hbmpOld);
+
 Exit0:
+
 		if (NULL != hDCSrc)
 		{
 			::DeleteDC(hDCSrc);
 			hDCSrc = NULL;
 		}
+
 		return bResult;
 	}
+
+
 	// 小于等于nAlpha的地方为透明，其他地方非透明
 	HRGN	CreateHollyRgn(INT nAlpha)
 	{
@@ -694,18 +710,16 @@ Exit0:
 
         // 生成透明区域为黑色，其它区域保持不变的位图
         ::SetBkColor(hImageDC, RGB(0,0,0));
-        COLORREF OldClr = ::SetTextColor(hImageDC, RGB(255,255,255));
+        ::SetTextColor(hImageDC, RGB(255,255,255));
         ::BitBlt(hImageDC, 0, 0, nWidthDest, nHeightDest, hMaskDC, 0, 0, SRCAND);
-		::SetTextColor(hImageDC, OldClr);
 
         // 透明部分保持屏幕不变，其它部分变成黑色
-        ::SetBkColor(hdcDest,RGB(255,255,255));
-        OldClr = ::SetTextColor(hdcDest,RGB(0,0,0));
+        COLORREF crBg = ::SetBkColor(hdcDest, RGB(255, 255, 255));
+        COLORREF crText = ::SetTextColor(hdcDest, RGB(0, 0, 0));
         ::BitBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, hMaskDC, 0, 0, SRCAND);
 
         // "或"运算,生成最终效果
         ::BitBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, hImageDC, 0, 0, SRCPAINT);
-		::SetTextColor(hdcDest, OldClr);
 
         // 清理、恢复	
         ::SelectObject(hImageDC, hOldImageBMP);
@@ -714,6 +728,9 @@ Exit0:
         ::DeleteDC(hMaskDC);
         ::DeleteObject(hImageBMP);
         ::DeleteObject(hMaskBMP);
+
+        ::SetBkColor(hdcDest, crBg);
+        ::SetTextColor(hdcDest, crText);
 
         return TRUE;
     }

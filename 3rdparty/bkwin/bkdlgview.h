@@ -11,7 +11,6 @@
 
 #include "bkwndnotify.h"
 #include "bkwndpanel.h"
-#include "bkshadowwnd.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Classes in this file:
@@ -26,7 +25,6 @@
 
 //////////////////////////////////////////////////////////////////////////
 // BkWinManager
-
 
 class BkWinManager
 {
@@ -163,7 +161,9 @@ public:
         {
             pT->_InvalidateControl(pWnd);
 
-            pWnd->SetInnerText(lpszText);
+			pWnd->TestMainThread();
+
+			pWnd->SetInnerText(lpszText);
 
             pT->_InvalidateControl(pWnd);
 
@@ -173,26 +173,6 @@ public:
         return FALSE;
     }
 
-	CString GetItemText(UINT uItemID)
-	{
-		T* pT = static_cast<T*>(this);
-		CBkWindow *pWnd = pT->FindChildByCmdID(uItemID);
-		CString strItemText = _T("");
-
-		if (pWnd)
-		{
-			pT->_InvalidateControl(pWnd);
-
-			strItemText = pWnd->GetInnerText();
-
-			pT->_InvalidateControl(pWnd);
-
-			return strItemText;
-		}
-
-		return strItemText;
-	}
-
     BOOL SetItemAttribute(UINT uItemID, LPCSTR lpszAttrib, LPCSTR lpszValue)
     {
         T* pT = static_cast<T*>(this);
@@ -201,6 +181,8 @@ public:
         if (pWnd)
         {
             pT->_InvalidateControl(pWnd);
+
+			pWnd->TestMainThread();
 
             pWnd->SetAttribute(lpszAttrib, lpszValue, FALSE);
 
@@ -342,17 +324,6 @@ public:
 
         return TRUE;
     }
-    BOOL SetItemRect(UINT uItemID, RECT &rcItem)
-    {
-        T* pT = static_cast<T*>(this);
-        CBkWindow *pWnd = pT->FindChildByCmdID(uItemID);
-        if (!pWnd)
-            return FALSE;
-
-        pWnd->SetRect(&rcItem);
-        
-        return TRUE;
-    }
 
     BOOL SetTabCurSel(UINT uItemID, int nPage)
     {
@@ -363,6 +334,8 @@ public:
 
         if (!pWnd->IsClass(CBkTabCtrl::GetClassName()))
             return FALSE;
+
+		pWnd->TestMainThread();
 
         BOOL bRet = ((CBkTabCtrl *)pWnd)->SetCurSel(nPage);
 
@@ -378,6 +351,8 @@ public:
 
         if (!pWnd->IsClass(CBkTabCtrl::GetClassName()))
             return FALSE;
+
+		pWnd->TestMainThread();
 
         BOOL bRet = ((CBkTabCtrl *)pWnd)->SetTabTitle(nPage, lpszTitle);
 
@@ -420,6 +395,7 @@ public:
         if (!pWnd->IsClass(CBkTabCtrl::GetClassName()))
             return FALSE;
 
+		pWnd->TestMainThread();
 
         ((CBkTabCtrl *)pWnd)->SetPageVisible(nPage, bVisible);
 
@@ -438,11 +414,13 @@ public:
 
         ((CBkIconWnd *)pWnd)->AttachIcon(hIcon);
 
+		pWnd->TestMainThread();
+
         pT->_InvalidateControl(pWnd);
 
         return TRUE;
     }
-	
+
 	BOOL SetItemPaintHook(UINT uItemID, IBkWindowPaintHook* pPaintHook)
 	{
 		T* pT = static_cast<T*>(this);
@@ -450,24 +428,12 @@ public:
 		if (!pWnd)
 			return FALSE;
 
+		pWnd->TestMainThread();
+
 		pWnd->SetPaintHook(pPaintHook);
 
 		return TRUE;
 	}
-	
-
-    BOOL FormatRichText(UINT uItemID, UINT uStringID, ...)
-    {
-        CString strFormat = BkString::Get(uStringID);
-        va_list args;
-        CString strText;
-
-        va_start(args, uStringID);
-
-        strText.FormatV(strFormat, args);
-
-        return SetRichText(uItemID, strText);
-    }
 
     BOOL FormatRichText(UINT uItemID, LPCTSTR lpszFormat, ...)
     {
@@ -496,7 +462,7 @@ public:
 
 // NOTICE: WS_TABSTOP needed for accept focus
 //         WS_CLIPSIBLINGS may cause IE Control Redraw Error
-typedef CWinTraits<WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP, WS_EX_CONTROLPARENT> CBkDialogViewTraits;
+typedef CWinTraits<WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP, 0> CBkDialogViewTraits;
 
 //////////////////////////////////////////////////////////////////////////
 // CBkDialogViewImpl
@@ -527,9 +493,6 @@ public:
         , m_bCanMaximize(FALSE)
         , m_bNeedRepaint(FALSE)
         , m_bNeedAllRepaint(TRUE)
-		, m_bCanCptMove(TRUE)
-		, m_bHoldSize(FALSE)
-		, m_pShadowWnd(NULL)
     {
     }
 
@@ -565,11 +528,8 @@ protected:
 
     BOOL m_bCaptureSetted;
 
-	BOOL m_bCanCptMove;
-
     CString m_strWindowCaption;
-	SIZE m_sizeDefault;
-    SIZE m_sizeMin;
+    SIZE m_sizeDefault;
 
     DWORD m_dwDlgStyle;
     DWORD m_dwDlgExStyle;
@@ -579,7 +539,6 @@ protected:
     BOOL m_bHasFooter;
 
     BOOL m_bCanMaximize;
-	BOOL m_bHoldSize;
 
     BOOL m_bXmlLoaded;
     BOOL m_bNeedRepaint;
@@ -588,10 +547,6 @@ protected:
     CToolTipCtrl m_wndToolTip;
 
     CRgn m_rgnInvalidate;
-
-    CStringA m_strSkinFrame;
-
-	CShadowWnd *m_pShadowWnd;
 
 public:
 
@@ -603,24 +558,18 @@ public:
             return m_hWnd;
 
         HWND hWnd = __baseClass::Create(hWndParent, rect, m_strWindowCaption, dwStyle, dwExStyle, MenuOrID, lpCreateParam);
+
         if (hWnd)
         {
             m_bkHeader.SetContainer(m_hWnd);
             m_bkBody.SetContainer(m_hWnd);
             m_bkFooter.SetContainer(m_hWnd);
 
-			if (m_wndToolTip.IsWindow())
-			{
-				m_wndToolTip.DestroyWindow();
-			}
-			m_wndToolTip.Detach();
-
-			m_wndToolTip.Create(hWnd);
+            m_wndToolTip.Create(hWnd);
 
             CToolInfo ti(0, hWnd);
             m_wndToolTip.AddTool(ti);
             m_wndToolTip.Activate(TRUE);
-			m_wndToolTip.SetMaxTipWidth(5000);
 
             if (!m_rgnInvalidate.IsNull())
                 m_rgnInvalidate.DeleteObject();
@@ -633,17 +582,6 @@ public:
     {
         return Create(hWndParent, NULL, 0, 0, MenuOrID, NULL);
     };
-
-	BOOL AssociateShadow(CShadowWnd *pShadowWnd)
-	{
-		BOOL bRet = FALSE;
-		if (NULL == m_pShadowWnd)
-		{
-			m_pShadowWnd = pShadowWnd;
-			bRet = TRUE;
-		}
-		return bRet;
-	}
 
     BOOL Load(UINT uResID)
     {
@@ -670,8 +608,8 @@ public:
 
         m_bXmlLoaded    = FALSE;
 
-        m_dwDlgStyle    = WS_POPUP | WS_SYSMENU | WS_TABSTOP;
-        m_dwDlgExStyle  = WS_EX_CONTROLPARENT;
+        m_dwDlgStyle    = WS_POPUP | WS_SYSMENU | 0;
+        m_dwDlgExStyle  = 0;
 
         m_bkHeader.BkSendMessage(WM_DESTROY);
         m_bkBody.BkSendMessage(WM_DESTROY);
@@ -701,17 +639,11 @@ public:
         }
 
         {
-            m_strSkinFrame = pXmlRootElem->Attribute("frame");
             m_strWindowCaption = CA2T(pXmlRootElem->Attribute("title"), CP_UTF8);
             m_sizeDefault.cx = 0;
             m_sizeDefault.cy = 0;
             pXmlRootElem->Attribute("width", (int *)&m_sizeDefault.cx);
             pXmlRootElem->Attribute("height", (int *)&m_sizeDefault.cy);
-
-			m_sizeMin.cx = 0;
-			m_sizeMin.cy = 0;
-			pXmlRootElem->Attribute("min_width", (int *)&m_sizeMin.cx);
-			pXmlRootElem->Attribute("min_height", (int *)&m_sizeMin.cy);
 
             BOOL bValue = FALSE;
 
@@ -719,60 +651,43 @@ public:
             if (bValue)
                 m_dwDlgExStyle |= WS_EX_APPWINDOW;
 
-			bValue = FALSE;
-			pXmlRootElem->Attribute("child", &bValue);
-			if (bValue)
-			{
-				m_dwDlgStyle &= ~WS_POPUP;
-				m_dwDlgStyle &= ~WS_SYSMENU;
-				m_dwDlgStyle |= WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-			}
-            else
+            bValue = FALSE;
+
+            pXmlRootElem->Attribute("resize", &bValue);
+
+            if (bValue)
             {
-				bValue = FALSE;
-				pXmlRootElem->Attribute("holdsize", &bValue);
-				if (bValue)
-					m_bHoldSize = TRUE;
-				else
-					m_bHoldSize = FALSE;
+                m_bCanMaximize = TRUE;
+                m_dwDlgStyle |= WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_THICKFRAME;
 
-
-                bValue = FALSE;
-                pXmlRootElem->Attribute("resize", &bValue);
-
-                if (bValue)
-                {
-                    m_bCanMaximize = TRUE;
-                    m_dwDlgStyle |= WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_THICKFRAME;
-                }
-                else
-                {
-                    m_bCanMaximize = FALSE;
-                    m_dwDlgStyle |= WS_MINIMIZEBOX;
-                }
-
-                bValue = FALSE;
-
-                pXmlRootElem->Attribute("noborder", &bValue);
-
-                if (bValue)
-                {
-                    m_dwDlgExStyle |= WS_EX_TOOLWINDOW | WS_EX_TOPMOST;
-                }
-                else
-                {
-                    m_dwDlgExStyle |= WS_EX_OVERLAPPEDWINDOW;
-                }
-
-				bValue = FALSE;
-
-				pXmlRootElem->Attribute("nomove", &bValue);
+				BOOL bValueT = FALSE;
+				pXmlRootElem->Attribute("nomaxsize", &bValueT);
 
 				if (bValue)
 				{
-					m_bCanCptMove = FALSE;
+					m_bCanMaximize = FALSE;
+					m_dwDlgStyle &= ~WS_MAXIMIZEBOX;
 				}
+				else
+					m_bCanMaximize = TRUE;
             }
+            else
+                m_bCanMaximize = FALSE;
+
+		
+            bValue = FALSE;
+
+            pXmlRootElem->Attribute("noborder", &bValue);
+
+            if (bValue)
+            {
+                m_dwDlgExStyle |= WS_EX_TOOLWINDOW | WS_EX_TOPMOST;
+            }
+            else
+            {
+                m_dwDlgExStyle |= WS_EX_OVERLAPPEDWINDOW;
+            }
+
         }
 
         TiXmlElement *pTiElement = NULL;
@@ -810,7 +725,7 @@ public:
         if (!m_hWnd)
             return TRUE;
 
-        _RepositionItems();
+        _Redraw();
 
         m_hBkWndHover = NULL;
         m_hBkWndPushDown = NULL;
@@ -832,11 +747,6 @@ public:
     {
         return m_sizeDefault;
     }
-
-	SIZE GetMinSize()
-	{
-		return m_sizeMin;
-	}
 
     DWORD GetDlgStyle()
     {
@@ -865,7 +775,7 @@ public:
 
     void Redraw()
     {
-        _Redraw();
+
     }
 
     CBkWindow* FindChildByCmdID(UINT uCmdID)
@@ -911,7 +821,10 @@ public:
         if (!pWnd)
             return FALSE;
 
-        if (!pWnd->IsClass(CBkDialog::GetClassName()) && !pWnd->IsClass(CBkPanel::GetClassName()) && !pWnd->IsClass(CBkTab::GetClassName()))
+        if (!pWnd->IsClass(CBkDialog::GetClassName()) && 
+			!pWnd->IsClass(CBkPanel::GetClassName()) && 
+			!pWnd->IsClass(CBkTab::GetClassName()) &&
+			!pWnd->IsClass(CBkDialogFile::GetClassName()))
             return FALSE;
 
         TiXmlElement *pXmlRootElem = xmlDoc.RootElement();
@@ -929,85 +842,6 @@ public:
         return TRUE;
     }
 
-	BOOL CanMaximize()
-	{
-		return m_bCanMaximize;
-	}
-
-	BOOL IsHoldSize()
-	{
-		return m_bHoldSize;
-	}
-	
-	void SetHoldSize(BOOL bHoldSize)
-	{
-		m_bHoldSize = bHoldSize;
-	}
-
-    //为了支持透明而加的
-    void OnPrint2(CDCHandle dc, UINT uFlags)
-    {
-        if (m_bNeedAllRepaint)
-        {
-            if (!m_rgnInvalidate.IsNull())
-                m_rgnInvalidate.DeleteObject();
-
-            m_bNeedAllRepaint = FALSE;
-        }
-
-        if (m_bNeedRepaint)
-        {
-            BkWinManager::EnterPaintLock();
-
-   
-
-            HFONT hftOld = dc.SelectFont(BkFontPool::GetFont(BKF_DEFAULTFONT));
-
-            dc.SetBkMode(TRANSPARENT);
-
-            if (!m_rgnInvalidate.IsNull())
-                dc.SelectClipRgn(m_rgnInvalidate);
-
-            if (!m_strSkinFrame.IsEmpty())
-            {
-                CRect rcClient;
-                GetClientRect(rcClient);
-
-                CBkSkinBase* pSkin = BkSkin::GetSkin(m_strSkinFrame);
-
-                if (pSkin)
-                    pSkin->Draw(dc, rcClient, 0);
-            }
-
-            if (m_bHasHeader)
-                m_bkHeader.RedrawRegion(dc, m_rgnInvalidate);
-            if (m_bHasBody)
-                m_bkBody.RedrawRegion(dc, m_rgnInvalidate);
-            if (m_bHasFooter)
-                m_bkFooter.RedrawRegion(dc, m_rgnInvalidate);
-
-  
-
-            if (!m_rgnInvalidate.IsNull())
-                m_rgnInvalidate.DeleteObject();
-
-            dc.SelectFont(hftOld);
-
-
-            BkWinManager::LeavePaintLock();
-
-            m_bNeedRepaint = FALSE;
-        }
-  
-    }
-
-	CBkImage* GetViewImg()
-	{
-		CDCHandle dc;
-		OnPaint(dc);
-		return &m_imgMem;
-	}
-
 protected:
 
     void _Redraw()
@@ -1022,7 +856,7 @@ protected:
 
     void _RepositionItems(BOOL bRedraw = TRUE)
     {
-        CRect rcClient, rcHeader(0,0,0,0), rcFooter(0,0,0,0), rcBody(0,0,0,0);
+        CRect rcClient, rcHeader, rcFooter, rcBody;
 
         if (!m_hWnd)
             return;
@@ -1094,10 +928,10 @@ protected:
             m_rgnInvalidate.CombineRgn(rgnInvalidate, RGN_OR);
         }
 
-		m_bNeedRepaint = TRUE;
-
         if (IsWindow())
             InvalidateRect(rcInvalidate, FALSE);
+
+        m_bNeedRepaint = TRUE;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1133,47 +967,12 @@ protected:
 
             dcMemHandle.Attach(dcMem);
 
-            if (!m_strSkinFrame.IsEmpty())
-            {
-                CRect rcClient;
-                GetClientRect(rcClient);
-
-                CBkSkinBase* pSkin = BkSkin::GetSkin(m_strSkinFrame);
-                
-                if (pSkin)
-                    pSkin->Draw(dcMemHandle, rcClient, 0);
-            }
-
             if (m_bHasHeader)
                 m_bkHeader.RedrawRegion(dcMemHandle, m_rgnInvalidate);
             if (m_bHasBody)
                 m_bkBody.RedrawRegion(dcMemHandle, m_rgnInvalidate);
             if (m_bHasFooter)
                 m_bkFooter.RedrawRegion(dcMemHandle, m_rgnInvalidate);
-
-			CWindow wndParent = GetParent();
-			if ((wndParent.GetStyle() & WS_CHILD) != WS_CHILD)
-			{
-				using namespace Gdiplus;
-
-				CRect rcClient;
-				GetClientRect(rcClient);
-
-				Graphics graphics(dcMemHandle);
-				static Pen penBlack(Gdiplus::Color(150, 0, 0, 0), 1);
-
-                Point points[5] = 
-                {
-                    Point(0, 0),
-                    Point(rcClient.right - 1, 0),
-                    Point(rcClient.right - 1, rcClient.bottom - 1),
-                    Point(0, rcClient.bottom - 1),
-                    Point(0, 0)
-                };
-
-				graphics.DrawLines(&penBlack, points, 5);
-				
-			}
 
             dcMemHandle.Detach();
 
@@ -1189,11 +988,8 @@ protected:
         }
 
         m_imgMem.Draw(dc, 0, 0);
-		if (m_pShadowWnd)
-		{
-			m_pShadowWnd->AfterViewPaint();
-		}
-    }    
+    }
+
     void OnPaint(CDCHandle dc)
     {
         CPaintDC dcPaint(m_hWnd);
@@ -1231,8 +1027,7 @@ protected:
 
     void OnMouseMove(UINT nFlags, CPoint point)
     {
-		::PostMessage(GetParent(), WM_MOUSEMOVE, (WPARAM)nFlags, MAKELPARAM(point.x, point.y));
-
+        ::SendMessage(GetParent(), WM_MOUSEMOVE, (LPARAM)nFlags, MAKEWPARAM(point.x, point.y));
         if (!m_bTrackFlag)
         {
             TRACKMOUSEEVENT tme;
@@ -1241,6 +1036,14 @@ protected:
             tme.dwFlags = TME_LEAVE;
             tme.dwHoverTime = 0;
             m_bTrackFlag = _TrackMouseEvent(&tme);
+
+            {
+                NMHDR nms;
+                nms.code = BKNM_MOUSEHOVER;
+                nms.hwndFrom = m_hWnd;
+                nms.idFrom = GetDlgCtrlID();
+                ::SendMessage(GetParent(), WM_NOTIFY, (LPARAM)nms.idFrom, (WPARAM)&nms);
+            }
         }
 
         HBKWND hBkWndHitTest = NULL;
@@ -1259,13 +1062,6 @@ protected:
             if (!bDisabled)
                 pWndHover->BkSendMessage(WM_MOUSEMOVE, (WPARAM)nFlags, MAKELPARAM(point.x, point.y));
 
-			BKNMCOMMAND nms;
-			nms.hdr.code = BKNM_MOUSEHOVER;
-			nms.hdr.hwndFrom = m_hWnd;
-			nms.hdr.idFrom = GetDlgCtrlID();
-			nms.uItemID = pWndHover->GetCmdID();
-			::SendMessage(GetParent(), WM_NOTIFY, (LPARAM)nms.hdr.idFrom, (WPARAM)&nms);
-
             if (hBkWndHitTest != m_hBkWndHover)
             {
                 CRect rcInvalidate;
@@ -1278,15 +1074,6 @@ protected:
                     {
                         _ModifyWndState(pWndHoverOld, 0, BkWndState_Hover);
                         pWndHoverOld->BkSendMessage(WM_MOUSELEAVE);
-
-						{
-							BKNMCOMMAND nms;
-							nms.hdr.code = BKNM_MOUSELEAVE;
-							nms.hdr.hwndFrom = m_hWnd;
-							nms.hdr.idFrom = GetDlgCtrlID();
-							nms.uItemID = pWndHoverOld->GetCmdID();
-							::SendMessage(GetParent(), WM_NOTIFY, (LPARAM)nms.hdr.idFrom, (WPARAM)&nms);
-						}
                     }
                 }
 
@@ -1297,17 +1084,14 @@ protected:
 
                 if (pWndHover)
                     m_wndToolTip.UpdateTipText(pWndHover->GetToolTipText(), m_hWnd);
-			}
+            }
         }
     }
 
     void OnMouseLeave()
     {
-		::PostMessage(GetParent(), WM_MOUSELEAVE, 0, 0);
-
         m_bTrackFlag = FALSE;
 
-		CBkWindow* pWnd = NULL;
         if (m_hBkWndHover)
         {
             CBkWindow* pWndHover = BkWnds::GetWindow(m_hBkWndHover);
@@ -1318,7 +1102,6 @@ protected:
             }
 
             m_hBkWndHover = NULL;
-			pWnd = pWndHover;
         }
 
         if (m_hBkWndPushDown)
@@ -1328,63 +1111,32 @@ protected:
                 _ModifyWndState(pWndPushdown, 0, BkWndState_PushDown);
 
             m_hBkWndPushDown = NULL;
-			pWnd = pWndPushdown;
         }
 
         {
-			BKNMCOMMAND nms;
-			nms.hdr.code = BKNM_MOUSELEAVE;
-			nms.hdr.hwndFrom = m_hWnd;
-			nms.hdr.idFrom = GetDlgCtrlID();
-			nms.uItemID = pWnd ? pWnd->GetCmdID() : 0;
-			::SendMessage(GetParent(), WM_NOTIFY, (LPARAM)nms.hdr.idFrom, (WPARAM)&nms);
+            NMHDR nms;
+            nms.code = BKNM_MOUSELEAVE;
+            nms.hwndFrom = m_hWnd;
+            nms.idFrom = GetDlgCtrlID();
+            ::SendMessage(GetParent(), WM_NOTIFY, (LPARAM)nms.idFrom, (WPARAM)&nms);
         }
     }
-
-	void OnRButtonDown(UINT nFlags, CPoint point)
-	{
-		HBKWND hBkWndHitTest = m_bkHeader.BkGetHWNDFromPoint(point, TRUE);
-
-		if (NULL == hBkWndHitTest)
-			hBkWndHitTest = m_bkBody.BkGetHWNDFromPoint(point, TRUE);
-		if (NULL == hBkWndHitTest)
-			hBkWndHitTest = m_bkFooter.BkGetHWNDFromPoint(point, TRUE);
-
-		CBkWindow* pWndPushDown = BkWnds::GetWindow(hBkWndHitTest);
-		if (pWndPushDown)
-		{
-			BKNMCOMMAND nms;
-			nms.hdr.code = BKNM_MOUSERBUTTONDOWN;
-			nms.hdr.hwndFrom = m_hWnd;
-			nms.hdr.idFrom = GetDlgCtrlID();
-			nms.uItemID = pWndPushDown->GetCmdID();
-			::SendMessage(GetParent(), WM_NOTIFY, (LPARAM)nms.hdr.idFrom, (WPARAM)&nms);
-		}
-	}
 
     void OnLButtonDown(UINT nFlags, CPoint point)
     {
         HBKWND hBkWndHitTest = m_bkHeader.BkGetHWNDFromPoint(point, TRUE);
 
+        ::SendMessage(GetParent(), WM_LBUTTONDOWN, (LPARAM)nFlags, MAKEWPARAM(point.x, point.y));
+
         if (hBkWndHitTest)
         {
             CBkWindow* pWndPushDown = BkWnds::GetWindow(hBkWndHitTest);
 
-            if (!(
-				pWndPushDown->IsClass("button") || 
-				pWndPushDown->IsClass("imgbtn") || 
-                pWndPushDown->IsClass("dlgbtn") || 
-				pWndPushDown->IsClass("tabctrl") || 
-				pWndPushDown->IsClass("link") ||
-				pWndPushDown->IsClass("skinbtn") ||
-				pWndPushDown->IsClass("check"))
-				&& !(GetDlgStyle() & WS_CHILD))
+            if (!(pWndPushDown->IsClass("button") || pWndPushDown->IsClass("imgbtn") || pWndPushDown->IsClass("link")))
             {
-                CWindow wndParent = GetParent();
+                CWindow &wndParent = GetParent();
 
-				SetFocus();
-
-                if (0 == (wndParent.GetStyle() & WS_MINIMIZE) && m_bCanCptMove )
+                if (0 == (wndParent.GetStyle() & (WS_MAXIMIZE | WS_MINIMIZE)))
                     wndParent.SendMessage(WM_SYSCOMMAND, SC_MOVE | HTCAPTION);
 
                 return;
@@ -1419,22 +1171,12 @@ protected:
 
                 _ModifyWndState(pWndPushDown, BkWndState_PushDown, 0);
                 pWndPushDown->BkSendMessage(WM_LBUTTONDOWN, (WPARAM)nFlags, MAKELPARAM(point.x, point.y));
-
-				BKNMCOMMAND nms;
-				nms.hdr.code = BKNM_MOUSELBUTTONDOWN;
-				nms.hdr.hwndFrom = m_hWnd;
-				nms.hdr.idFrom = GetDlgCtrlID();
-				nms.uItemID = pWndPushDown->GetCmdID();
-
-				LRESULT lRet = ::SendMessage(GetParent(), WM_NOTIFY, (LPARAM)nms.hdr.idFrom, (WPARAM)&nms);
             }
         }
     }
 
     void OnLButtonUp(UINT nFlags, CPoint point)
     {
-		SetFocus();
-
         BOOL bNotifyClick = FALSE;
         UINT uCmdID = 0;
         CBkWindow* pWndClick = NULL;
@@ -1489,57 +1231,28 @@ protected:
 
     void OnLButtonDblClk(UINT nFlags, CPoint point)
     {
-		CBkWindow* pWndPushDown = NULL;
-
         HBKWND hBkWndHitTest = m_bkHeader.BkGetHWNDFromPoint(point, TRUE);
 
         if (hBkWndHitTest)
         {
-            pWndPushDown = BkWnds::GetWindow(hBkWndHitTest);
+            CBkWindow* pWndPushDown = BkWnds::GetWindow(hBkWndHitTest);
 
-			if (!(	pWndPushDown->IsClass("button") || 
-					pWndPushDown->IsClass("imgbtn") || 
-					pWndPushDown->IsClass("dlgbtn") || 
-					pWndPushDown->IsClass("tabctrl") || 
-					pWndPushDown->IsClass("link") ||
-					pWndPushDown->IsClass("skinbtn") ||
-					pWndPushDown->IsClass("check"))  )
+            if (!(pWndPushDown->IsClass("button") || pWndPushDown->IsClass("imgbtn") || pWndPushDown->IsClass("link")))
             {
                 if (m_bCanMaximize)
                 {
-                    CWindow wndParent = GetParent();
+                    CWindow &wndParent = GetParent();
                     DWORD dwStyle = wndParent.GetStyle();
 
                     if (WS_MAXIMIZE == (dwStyle & WS_MAXIMIZE))
                         wndParent.SendMessage(WM_SYSCOMMAND, SC_RESTORE | HTCAPTION);
                     else
                         wndParent.SendMessage(WM_SYSCOMMAND, SC_MAXIMIZE | HTCAPTION);
+                }
 
-					 return;
-                }               
+                return;
             }
         }
-		
-		SetFocus();
-
-		if (NULL == hBkWndHitTest)
-			hBkWndHitTest = m_bkBody.BkGetHWNDFromPoint(point, TRUE);
-		if (NULL == hBkWndHitTest)
-			hBkWndHitTest = m_bkFooter.BkGetHWNDFromPoint(point, TRUE);
-
-		pWndPushDown = BkWnds::GetWindow(hBkWndHitTest);
-
-		if (pWndPushDown)
-		{
-			BKNMCOMMAND nms;
-			nms.hdr.code = BKNM_MOUSELBUTTONDBLCLK;
-			nms.hdr.hwndFrom = m_hWnd;
-			nms.hdr.idFrom = GetDlgCtrlID();
-			nms.uItemID = pWndPushDown->GetCmdID();;
-			nms.szItemClass = pWndPushDown->GetObjectClass();
-
-			LRESULT lRet = ::SendMessage(GetParent(), WM_NOTIFY, (LPARAM)nms.hdr.idFrom, (WPARAM)&nms);
-		}		
     }
 
     BOOL OnSetCursor(CWindow /*wnd*/, UINT nHitTest, UINT message)
@@ -1548,16 +1261,10 @@ protected:
         {
             CBkWindow *pBkWndHover = BkWnds::GetWindow(m_hBkWndHover);
 
-            if (pBkWndHover)
+            if (pBkWndHover && !pBkWndHover->IsDisabled(TRUE))
             {
-                if (pBkWndHover->IsClass(CBkRealWnd::GetClassName()))
-                    return FALSE;
-
-                if (!pBkWndHover->IsDisabled(TRUE))
-                {
-                    pBkWndHover->SetCursor();
-                    return TRUE;
-                }
+                pBkWndHover->SetCursor();
+                return TRUE;
             }
         }
 
@@ -1568,7 +1275,6 @@ protected:
 
     BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
     {
-		SetMsgHandled(FALSE);
         return FALSE;
     }
 
@@ -1600,27 +1306,7 @@ protected:
 
         return 0;
     }
-
-    UINT OnGetDlgCode(LPMSG lpMsg)
-    {
-        return DLGC_WANTALLKEYS | DLGC_WANTARROWS | DLGC_WANTCHARS;
-    }
-
-    void OnSetFocus(CWindow /*wndOld*/)
-    {
-        GetNextDlgTabItem(NULL).SetFocus();
-	    SetMsgHandled(FALSE);
-    }
-
-    LRESULT OnKeyUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        ::PostMessage(GetParent(), WM_KEYUP, wParam, lParam);
-
-        bHandled = FALSE;
-
-        return 0;
-    }
-
+ 
 protected:
     BEGIN_MSG_MAP_EX(CBkDialogViewImpl)
         MESSAGE_RANGE_HANDLER_EX(WM_MOUSEFIRST, WM_MOUSELAST, OnToolTipEvent)
@@ -1632,20 +1318,16 @@ protected:
         MSG_WM_MOUSEMOVE(OnMouseMove)
         MSG_WM_MOUSELEAVE(OnMouseLeave)
         MSG_WM_LBUTTONDOWN(OnLButtonDown)
-		MSG_WM_RBUTTONDOWN(OnRButtonDown)
         MSG_WM_LBUTTONUP(OnLButtonUp)
         MSG_WM_LBUTTONDBLCLK(OnLButtonDblClk)
         MSG_WM_SETCURSOR(OnSetCursor)
         MSG_WM_MOUSEWHEEL(OnMouseWheel)
-        MSG_WM_GETDLGCODE(OnGetDlgCode)
-        MSG_WM_SETFOCUS(OnSetFocus)
         NOTIFY_CODE_HANDLER_EX(BKINM_INVALIDATERECT, OnBKINMInvalidateRect)
         REFLECT_NOTIFY_CODE(NM_CUSTOMDRAW)
         MESSAGE_HANDLER_EX(WM_NOTIFY, OnChildNotify)
         MESSAGE_HANDLER_EX(WM_COMMAND, OnChildNotify)
         MESSAGE_HANDLER_EX(WM_VSCROLL, OnChildNotify)
         MESSAGE_HANDLER_EX(WM_HSCROLL, OnChildNotify)
-        MESSAGE_HANDLER(WM_KEYUP,       OnKeyUp)
         REFLECT_NOTIFICATIONS_EX()
     END_MSG_MAP()
 };
@@ -1691,7 +1373,7 @@ public:
     {
         static ATL::CWndClassInfo wc = {
                 { sizeof(WNDCLASSEX), 
-                CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, 
+                CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS | (IsWinXPAndLater() ? CS_DROPSHADOW : 0), 
                   StartWindowProc, 0, 0, NULL, NULL, NULL, 
                   (HBRUSH)(COLOR_WINDOW + 1), NULL, NULL, NULL },
                 NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
@@ -1704,9 +1386,6 @@ public:
         : m_uResID(uResID)
         , m_bShowWindow(TRUE)
         , m_bExitModalLoop(FALSE)
-        , m_bShadowEnable(true)
-		, m_bSetDragFullWindows(false)
-		, m_nDragFullWindows(-1)
     {
     }
     virtual ~CBkDialogImpl()
@@ -1722,12 +1401,7 @@ protected:
 
     TBkView m_richView;
 
-	CShadowWnd m_shadowWnd;
-
     BOOL m_bShowWindow;
-    bool m_bShadowEnable; //阴影是否可用 xujianxin 2011-12-31
-	bool m_bSetDragFullWindows;
-	int m_nDragFullWindows;
 
     void ResizeClient(SIZE sizeClient, BOOL bRedraw)
     {
@@ -1757,22 +1431,15 @@ protected:
 
     void OnSize(UINT nType, CSize size)
     {
-		if (SIZE_MINIMIZED != nType && ::IsWindow(m_richView.m_hWnd))
+        CRect rcClient;
+
+        GetClientRect(rcClient);
+
+        if (SIZE_MINIMIZED != nType)
         {
-			if (SIZE_MAXIMIZED == nType && !m_richView.CanMaximize())
-			{
-				LONG dwStyle = GetWindowLong(GWL_STYLE);
-				dwStyle &= ~WS_MAXIMIZE;
-				SetWindowLong(GWL_STYLE, dwStyle);
+            if (m_richView.m_hWnd)
+                m_richView.MoveWindow(rcClient);
 
-				CenterWindow();
-				SetMsgHandled(FALSE);
-				return;
-			}
-			CRect rcClient;
-			GetClientRect(rcClient);
-
-			m_richView.MoveWindow(rcClient);
         }
 
         SetMsgHandled(FALSE);
@@ -1783,53 +1450,29 @@ protected:
         return TRUE;
     }
 
-	LRESULT OnWindowPosChanging(LPWINDOWPOS lpWindowPos)
-	{
-		if (m_richView.IsHoldSize() && m_richView.GetDefaultSize().cx && m_richView.GetDefaultSize().cy)
-		{
-			lpWindowPos->cx = m_richView.GetDefaultSize().cx;
-			lpWindowPos->cy = m_richView.GetDefaultSize().cy;
-		}
-
-		SetMsgHandled(FALSE);
-		
-		return S_OK;
-	}
-
     LRESULT OnNcCalcSize(BOOL bCalcValidRects, LPARAM lParam)
     {
         if (bCalcValidRects)
         {
-            CRect rc;
-			LPNCCALCSIZE_PARAMS pParam = (LPNCCALCSIZE_PARAMS)lParam;
+            CRect rcWindow;
 
-			if (!(m_richView.GetDlgStyle() & WS_CHILD))
-				GetWindowRect(rc);
-			else
-				rc = pParam->rgrc[1];
+            GetWindowRect(rcWindow);
 
+            LPNCCALCSIZE_PARAMS pParam = (LPNCCALCSIZE_PARAMS)lParam;
 
-            if ((SWP_NOSIZE & pParam->lppos->flags))
+            if (SWP_NOSIZE == (SWP_NOSIZE & pParam->lppos->flags))
                 return 0;
 
             if (0 == (SWP_NOMOVE & pParam->lppos->flags))
             {
-                rc.left = pParam->lppos->x;
-                rc.top = pParam->lppos->y;
+                rcWindow.left = pParam->lppos->x;
+                rcWindow.top = pParam->lppos->y;
             }
 
-
-            rc.right = rc.left + max(pParam->lppos->cx, m_richView.GetMinSize().cx);
-            rc.bottom = rc.top + max(pParam->lppos->cy, m_richView.GetMinSize().cy);
-
-			if (m_richView.IsHoldSize() && m_richView.GetDefaultSize().cx && m_richView.GetDefaultSize().cy)
-			{
-				rc.right = rc.left + m_richView.GetDefaultSize().cx;
-				rc.bottom = rc.top + m_richView.GetDefaultSize().cy;
-			}
-
-
-            pParam->rgrc[0] = rc;
+            rcWindow.right = rcWindow.left + pParam->lppos->cx;
+            rcWindow.bottom = rcWindow.top + pParam->lppos->cy;
+            pParam->rgrc[0] = rcWindow;
+            pParam->rgrc[1] = pParam->rgrc[0];
         }
 
         return 0;
@@ -1844,21 +1487,13 @@ protected:
             MONITORINFO mi = {sizeof(MONITORINFO)};
             ::GetMonitorInfo(hMonitor, &mi);
 
-			CRect rc;
-			rc.left = 0;
-			rc.right = rc.left + m_richView.GetDefaultSize().cx;
-			rc.top = 0;
-			rc.bottom = rc.top + m_richView.GetDefaultSize().cy;
-
-			CRect rcWork = m_richView.CanMaximize() ? mi.rcWork : rc;
-			CRect rcMonitor = m_richView.CanMaximize() ? mi.rcMonitor : CRect(0, 0, 0, 0);
-            
-			lpMMI->ptMaxPosition.x = abs(rcWork.left - rcMonitor.left);
-            lpMMI->ptMaxPosition.y = abs(rcWork.top - rcMonitor.top);
-            lpMMI->ptMaxSize.x = abs(rcWork.Width());
-            lpMMI->ptMaxSize.y = abs(rcWork.Height());
-            lpMMI->ptMaxTrackSize.x = abs(rcWork.Width());
-            lpMMI->ptMaxTrackSize.y = abs(rcWork.Height());
+            CRect rcWork = mi.rcWork, rcMonitor = mi.rcMonitor;
+            lpMMI->ptMaxPosition.x = abs(rcWork.left - rcMonitor.left) - 1;
+            lpMMI->ptMaxPosition.y = abs(rcWork.top - rcMonitor.top) - 1;
+            lpMMI->ptMaxSize.x = abs(rcWork.Width()) + 2;
+            lpMMI->ptMaxSize.y = abs(rcWork.Height()) + 2;
+            lpMMI->ptMaxTrackSize.x = abs(rcWork.Width()) + 2;
+            lpMMI->ptMaxTrackSize.y = abs(rcWork.Height()) + 2;
         }
     }
 
@@ -1906,19 +1541,6 @@ public:
         return m_richView.SetRichText(uItemID, uResID);
     }
 
-    BOOL FormatRichText(UINT uItemID, UINT uStringID, ...)
-    {
-        CString strFormat = BkString::Get(uStringID);
-        va_list args;
-        CString strText;
-
-        va_start(args, uStringID);
-
-        strText.FormatV(strFormat, args);
-
-        return m_richView.SetRichText(uItemID, strText);
-    }
-
     BOOL FormatRichText(UINT uItemID, LPCTSTR lpszFormat, ...)
     {
         va_list args;
@@ -1946,11 +1568,6 @@ public:
         return m_richView.SetItemText(uItemID, lpszText);
     }
 
-	CString GetItemText(UINT uItemID)
-	{
-		return m_richView.GetItemText(uItemID);
-	}
-
     BOOL FormatItemText(UINT uItemID, LPCTSTR lpszFormat, ...)
     {
         va_list args;
@@ -1971,10 +1588,6 @@ public:
     BOOL GetItemRect(UINT uItemID, RECT &rcItem)
     {
         return m_richView.GetItemRect(uItemID, rcItem);
-    }
-    BOOL SetItemRect(UINT uItemID, RECT &rcItem)
-    {
-        return m_richView.SetItemRect(uItemID, rcItem);
     }
 
     BOOL SetItemStringAttribute(UINT uItemID, LPCSTR lpszAttrib, LPCTSTR lpszValue)
@@ -2073,7 +1686,7 @@ public:
         m_bShowWindow = FALSE;
     }
 
-    HWND Create(HWND hWndParent = ::GetActiveWindow(), LPRECT rect = NULL, _U_MENUorID MenuOrID = 0U)
+    HWND Create(HWND hWndParent = ::GetActiveWindow(), LPRECT rect = NULL)
     {
         if (!m_richView.XmlLoaded())
         {
@@ -2092,29 +1705,11 @@ public:
         if (rect)
             rcWnd = rect;
 
-		if (rcWnd.Width() < m_richView.GetMinSize().cx)
-			rcWnd.right = rcWnd.left + m_richView.GetMinSize().cx;
-
-		if (rcWnd.Height() < m_richView.GetMinSize().cy)
-			rcWnd.bottom = rcWnd.top + m_richView.GetMinSize().cy;
-
-        HWND hWnd = __super::Create(hWndParent, rcWnd, lpszCaption, m_richView.GetDlgStyle(), m_richView.GetDlgExStyle(), MenuOrID);
+        HWND hWnd = __super::Create(hWndParent, rcWnd, lpszCaption, m_richView.GetDlgStyle(), m_richView.GetDlgExStyle());
         if (!hWnd)
             return NULL;
 
-        if (m_bShadowEnable)
-        {
-            if ((GetStyle() & WS_CHILD) != WS_CHILD)
-            {
-                m_shadowWnd.Create(hWnd);
-				m_richView.AssociateShadow(&m_shadowWnd);
-            }
-        }
-		
         BkWinThemeFunc::SetWindowTheme(hWnd, L"", L"");
-
-		if (m_richView.IsWindow())
-			m_richView.DestroyWindow();
 
         if (rect)
         {
@@ -2143,11 +1738,6 @@ public:
 
         return hWnd;
     }
-
-	void RedrawView()
-	{
-		m_richView.Redraw();
-	}
 
     UINT_PTR DoModal(HWND hWndParent = NULL, LPRECT rect = NULL)
     {
@@ -2178,28 +1768,12 @@ public:
         HWND hWndLastActive = BkWinManager::SetActive(hWnd);
 
         if (!rect)
-            CenterWindow(hWndParent);
+            CenterWindow();
 
         if (m_bShowWindow)
         {
-            DWORD dwForeID = ::GetWindowThreadProcessId(::GetForegroundWindow(), NULL);
-            DWORD dwCurID = ::GetCurrentThreadId();
-
-            SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)0, 0);
-
+            
             ::SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
-
-            if (dwForeID != dwCurID)
-            {
-                ::AttachThreadInput(dwCurID, dwForeID, TRUE);
-            }
-
-            ::SetForegroundWindow(hWnd);
-
-            if (dwForeID != dwCurID)
-            {
-                ::AttachThreadInput(dwCurID, dwForeID, FALSE);
-            }
         }
 
         _ModalMessageLoop();
@@ -2215,10 +1789,10 @@ public:
         if (bEnableParent)
         {
             ::EnableWindow(hWndParent, TRUE);
-
-            if (hWndParent != NULL && ::GetActiveWindow() == m_hWnd)
-                ::SetActiveWindow(hWndParent);
         }
+
+        if (hWndParent != NULL && ::GetActiveWindow() == m_hWnd)
+            ::SetActiveWindow(hWndParent);
 
         BkWinManager::SetActive(hWndLastActive);
 
@@ -2289,35 +1863,6 @@ public:
         LRESULT lRet = ::SendMessage(m_hWnd, WM_NOTIFY, (LPARAM)nms.hdr.idFrom, (WPARAM)&nms);
     }
 
-	BOOL IsDialogMessage(LPMSG pMsg)
-	{
-		if((pMsg->message < WM_KEYFIRST || pMsg->message > WM_KEYLAST) &&
-			(pMsg->message < WM_MOUSEFIRST || pMsg->message > WM_MOUSELAST))
-			return FALSE;
-
-		// find a direct child of the dialog from the window that has focus
-		HWND hWndCtl = ::GetFocus();
-		if (IsChild(hWndCtl) && hWndCtl != m_richView.m_hWnd && hWndCtl != m_hWnd)
-		{
-			while (hWndCtl)
-			{
-				HWND hWndParent = ::GetParent(hWndCtl);
-
-				if (m_richView.m_hWnd == hWndParent)
-					break;
-
-				hWndCtl = hWndParent;
-			}
-		}
-		// give controls a chance to translate this message
-		if (hWndCtl && ::SendMessage(hWndCtl, WM_FORWARDMSG, 0, (LPARAM)pMsg) == 1)
-			return TRUE;
-
-		// do the Windows default thing
-		return ::IsDialogMessage(GetViewHWND(), pMsg);;
-	}
-
-
 protected:
 
     BOOL m_bExitModalLoop;
@@ -2350,73 +1895,19 @@ protected:
                 break;   // WM_QUIT, exit message loop
             }
 
-			if (!IsDialogMessage(&msg))
-			{
-				::TranslateMessage(&msg);
-				::DispatchMessage(&msg);
-			}
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
         }
     }
-
-    BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
-    {
-        HWND hWnd = ::WindowFromPoint(pt);
-        ::SendMessage(
-            hWnd, WM_VSCROLL, 
-            MAKEWPARAM(zDelta < 0 ? SB_PAGEDOWN : SB_PAGEUP, ::GetScrollPos(hWnd, SB_VERT)), NULL);
-
-        return TRUE;
-    }
-
-    void OnSetFocus(CWindow /*wndOld*/)
-    {
-        m_richView.SetFocus();
-    }
-
-	void OnNotifyShadow(HWND hParent, UINT uMsg, WPARAM wParam, LPARAM lParam)
-	{
-        if (m_bShadowEnable)
-        {
-            m_shadowWnd.FollowParent(hParent, uMsg, wParam, lParam);	
-        }
-	}
-
-	void OnEnterSizeMove()
-	{
-		if (!m_bSetDragFullWindows || m_nDragFullWindows != -1)
-			return;
-
-		BOOL bRet = SystemParametersInfo(SPI_GETDRAGFULLWINDOWS, NULL, &m_nDragFullWindows, 0);
-		if (bRet && m_nDragFullWindows)
-			bRet = SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, FALSE, NULL, 0);
-	}
-
-	void OnExitSizeMove()
-	{
-		if (!m_bSetDragFullWindows)
-			return;
-
-		int nDragFullWindows = FALSE;
-		BOOL bRet = SystemParametersInfo(SPI_GETDRAGFULLWINDOWS, NULL, &nDragFullWindows, 0);
-		if (m_nDragFullWindows != nDragFullWindows)
-			bRet = SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, m_nDragFullWindows, NULL, 0);
-		m_nDragFullWindows = -1;
-	}
 
 	BEGIN_MSG_MAP_EX(CBkDialogImpl)
-		MSG_WM_NOTIFYSHADOW(OnNotifyShadow)
         MSG_WM_NCACTIVATE(OnNcActivate)
         MSG_WM_ERASEBKGND(OnEraseBkgnd)
         MSG_WM_NCCALCSIZE(OnNcCalcSize)
-		MSG_WM_WINDOWPOSCHANGING(OnWindowPosChanging)
         MSG_WM_GETMINMAXINFO(OnGetMinMaxInfo)
         MSG_WM_SIZE(OnSize)
         MSG_WM_KEYDOWN(OnKeyDown)
         MSG_WM_CLOSE(OnClose)
-        MSG_WM_MOUSEWHEEL(OnMouseWheel)
-        MSG_WM_SETFOCUS(OnSetFocus)
-		MSG_WM_ENTERSIZEMOVE(OnEnterSizeMove)
-		MSG_WM_EXITSIZEMOVE(OnExitSizeMove)
         COMMAND_ID_HANDLER_EX(IDOK, OnOK)
         COMMAND_ID_HANDLER_EX(IDCANCEL, OnCancel)
 	END_MSG_MAP()
@@ -2437,7 +1928,7 @@ protected:
 
     void OnBkCommand(UINT uItemID, LPCSTR szItemClass)
     {
-        if (strcmp(CBkButton::GetClassName(), szItemClass) != 0 && strcmp(CBkImageBtnWnd::GetClassName(), szItemClass) != 0 && strcmp(CBkSkinBtnWnd::GetClassName(), szItemClass) != 0)
+        if (strcmp(CBkButton::GetClassName(), szItemClass) != 0 && strcmp(CBkImageBtnWnd::GetClassName(), szItemClass) != 0)
             return;
 
         EndDialog(uItemID);

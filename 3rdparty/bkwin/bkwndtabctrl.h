@@ -9,9 +9,6 @@
 
 #include "bkwndnotify.h"
 
-//存的最大矩形个数
-#define MAX_RECT_NUM 10
-
 class CBkTab : public CBkDialog
 {
     BKOBJ_DECLARE_CLASS_NAME(CBkTab, "tab")
@@ -66,21 +63,14 @@ protected:
     int m_nFramePos;
     int m_nTabWidth;
     int m_nTabHeight;
-    int m_nVertFont;//字体是否是竖直排的,add by xujianxin 2011-06-21
-    CStringA m_strSkinTab;
-    CStringA m_strSkinFrame;
-    CStringA m_strSkinIcon;
-    CStringA m_strSkinSplitter;
-//     CBkSkinBase *m_pSkinTab;
-//     CBkSkinBase *m_pSkinFrame;
-//     CBkSkinBase *m_pSkinIcon;
-//     CBkSkinBase *m_pSkinSplitter;
+    CBkSkinBase *m_pSkinTab;
+    CBkSkinBase *m_pSkinFrame;
+    CBkSkinBase *m_pSkinIcon;
+    CBkSkinBase *m_pSkinSplitter;
     CRect m_rcClient;
     POINT m_ptIcon;
     POINT m_ptText;
     int m_nTabAlign;
-	COLORREF	m_crTabText;
-	HFONT		m_ftSel;
 
     enum {
         AlignTop,
@@ -91,10 +81,10 @@ public:
 
     CBkTabCtrl()
         : m_nCurrentPage(0)
-//         , m_pSkinTab(NULL)
-//         , m_pSkinFrame(NULL)
-//         , m_pSkinIcon(NULL)
-//         , m_pSkinSplitter(NULL)
+        , m_pSkinTab(NULL)
+        , m_pSkinFrame(NULL)
+        , m_pSkinIcon(NULL)
+        , m_pSkinSplitter(NULL)
         , m_nTabSpacing(0)
         , m_nTabPos(0)
         , m_nFramePos(0)
@@ -102,9 +92,6 @@ public:
         , m_nTabHeight(0)
         , m_nHoverTabItem(-1)
         , m_nTabAlign(AlignTop)
-		, m_crTabText(CLR_INVALID)
-		, m_ftSel(NULL)
-        ,m_nVertFont(0)
     {
         m_ptIcon.x = m_ptIcon.y = 0;
         m_ptText.x = m_ptText.y = 0;
@@ -310,9 +297,8 @@ public:
 
         SIZE size = {0, 0};
 
-        CBkSkinBase *pSkinTab = BkSkin::GetSkin(m_strSkinTab);
-        if (pSkinTab)
-            size = pSkinTab->GetSkinSize();
+        if (m_pSkinTab)
+            size = m_pSkinTab->GetSkinSize();
 
         if (0 != m_nTabHeight)
             size.cy = m_nTabHeight;
@@ -472,21 +458,17 @@ public:
         CRect rcItem;
         SIZE sizeTab = {0, 0}, sizeIcon = {0, 0}, sizeSplitter = {0, 0};
         CString strTabText;
-        const BkStyle& theStyle = GetStyle();
 
         rcItem = m_rcWindow;
 
-        CBkSkinBase *pSkinTab = BkSkin::GetSkin(m_strSkinTab);
-        if (pSkinTab)
-            sizeTab = pSkinTab->GetSkinSize();
+        if (m_pSkinTab)
+            sizeTab = m_pSkinTab->GetSkinSize();
 
-        CBkSkinBase *pSkinIcon = BkSkin::GetSkin(m_strSkinIcon);
-        if (pSkinIcon)
-            sizeIcon = pSkinIcon->GetSkinSize();
+        if (m_pSkinIcon)
+            sizeIcon = m_pSkinIcon->GetSkinSize();
 
-        CBkSkinBase *pSkinSplitter = BkSkin::GetSkin(m_strSkinSplitter);
-        if (pSkinSplitter)
-            sizeSplitter = pSkinSplitter->GetSkinSize();
+        if (m_pSkinSplitter)
+            sizeSplitter = m_pSkinSplitter->GetSkinSize();
 
         if (0 != m_nTabHeight)
             sizeTab.cy = m_nTabHeight;
@@ -504,24 +486,18 @@ public:
             break;
         }
 
-        CBkSkinBase *pSkinFrame = BkSkin::GetSkin(m_strSkinFrame);
-        if (pSkinFrame)
-            pSkinFrame->Draw(dc, rcItem, BkWndState_Normal);
+        if (m_pSkinFrame)
+            m_pSkinFrame->Draw(dc, rcItem, BkWndState_Normal);
 
         dc.SetBkMode(TRANSPARENT);
 
-		COLORREF OldClr = CLR_INVALID;
-		if (CLR_INVALID != m_crTabText)
-			OldClr = dc.SetTextColor(m_crTabText);
-		else if (CLR_INVALID != m_crText)
-            OldClr = dc.SetTextColor(m_crText);
-        else if (CLR_INVALID != theStyle.m_crText)
-            OldClr = dc.SetTextColor(theStyle.m_crText);
+        if (CLR_INVALID != m_style.m_crText)
+            dc.SetTextColor(m_style.m_crText);
 
         HFONT hFontOld = NULL;
 
-        if (NULL != theStyle.m_ftText)
-            hFontOld = dc.SelectFont(theStyle.m_ftText);
+        if (NULL != m_style.m_ftText)
+            hFontOld = dc.SelectFont(m_style.m_ftText);
 
         int nVisibleCount = GetVisibleTabCount();
 
@@ -532,7 +508,7 @@ public:
 
             GetTabItemRect(i, rcItem);
 
-            if (pSkinSplitter && nVisibleCount > 1)
+            if (m_pSkinSplitter && nVisibleCount > 1)
             {
                 nVisibleCount --;
 
@@ -552,39 +528,33 @@ public:
                     break;
                 }
 
-                pSkinSplitter->Draw(dc, rcDraw, (DWORD)-1);
+                m_pSkinSplitter->Draw(dc, rcDraw, -1);
             }
 
             if (i == m_nCurrentPage)
                 continue;
 
-            if (pSkinTab)
-                pSkinTab->Draw(dc, rcItem, (i != m_nHoverTabItem) ? BkWndState_Normal : BkWndState_Hover);
+            if (m_pSkinTab)
+                m_pSkinTab->Draw(dc, rcItem, (i != m_nHoverTabItem) ? BkWndState_Normal : BkWndState_Hover);
 
-            if (pSkinIcon)
+            if (m_pSkinIcon)
             {
                 CRect rcDraw = rcItem;
                 rcDraw.OffsetRect(m_ptIcon);
-                pSkinIcon->Draw(dc, rcDraw, i);
+                m_pSkinIcon->Draw(dc, rcDraw, i);
             }
 
             rcItem.OffsetRect(m_ptText);
 
             strTabText = GetTab(i)->GetTitle();
-
-            MyDrawText(dc, rcItem, strTabText);
-            
-          
+            dc.DrawText(strTabText, strTabText.GetLength(), rcItem, DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_TABSTOP);
         }
 
-        if (NULL != theStyle.m_ftHover)
-            hFontOld = (NULL == hFontOld) ? dc.SelectFont(theStyle.m_ftHover) : NULL;
+        if (NULL != m_style.m_ftHover)
+            hFontOld = (NULL == hFontOld) ? dc.SelectFont(m_style.m_ftHover) : NULL;
 
-        if (CLR_INVALID != theStyle.m_crHoverText)
-		{
-			dc.SetTextColor(OldClr);
-            OldClr = dc.SetTextColor(theStyle.m_crHoverText);
-		}
+        if (CLR_INVALID != m_style.m_crHoverText)
+            dc.SetTextColor(m_style.m_crHoverText);
 
         for (int i = 0; i < nPageCount; i ++)
         {
@@ -596,132 +566,26 @@ public:
 
             GetTabItemRect(i, rcItem);
 
-            if (pSkinTab)
-                pSkinTab->Draw(dc, rcItem, BkWndState_PushDown);
+            if (m_pSkinTab)
+                m_pSkinTab->Draw(dc, rcItem, BkWndState_PushDown);
 
-            if (pSkinIcon)
+            if (m_pSkinIcon)
             {
                 CRect rcDraw = rcItem;
                 rcDraw.OffsetRect(m_ptIcon);
-                pSkinIcon->Draw(dc, rcDraw, i);
+                m_pSkinIcon->Draw(dc, rcDraw, i);
             }
 
             rcItem.OffsetRect(m_ptText);
 
             strTabText = GetTab(i)->GetTitle();
+            dc.DrawText(strTabText, strTabText.GetLength(), rcItem, DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_TABSTOP);
 
-			HFONT hFontOld2 = NULL;
-			if (m_ftSel)
-				hFontOld2 = dc.SelectFont(m_ftSel);
-
-          MyDrawText(dc, rcItem, strTabText);
-
-			if (hFontOld2)
-				dc.SelectFont(hFontOld2);
             break;
         }
 
-		if (CLR_INVALID != OldClr)
-			dc.SetTextColor(OldClr);
-			
-		if (NULL != hFontOld)
+        if (NULL != hFontOld)
             dc.SelectFont(hFontOld);
-    }
-
-    //add by xjx,添加对竖直文字的绘制
-    void MyDrawText(CDCHandle& dc,  CRect rcItem, const CString &strTabText)
-    {
-
-        if (m_nVertFont != 0)
-        {
-            //需要竖直写文本,在这里为了换行的空间，我采取逐个绘制
-            int nLen = (int)strTabText.GetLength();
-            CRect *pszRect = m_szRect;
-            if (nLen > MAX_RECT_NUM)
-            {
-                pszRect = new CRect[nLen];
-            }
-            int nSpaceWidth = 1;
-            int nMaxWidth = 0;
-            int nTotalHeight = 0;
-            for (int i = 0; i < nLen; i++)
-            {
-                CRect rc;
-                dc.DrawText((LPCWSTR)strTabText + i, 1, rc, DT_CALCRECT);
-
-				if (BkFontPool::IsYaHei())
-					rc.bottom = rc.top + BkFontPool::GetDefaultFontSize() + BkFontPool::GetFontSizeAdding(dc.GetCurrentFont());
-
-                if (rc.Width() > nMaxWidth)
-                {
-                    nMaxWidth = rc.Width();
-                }
-                nTotalHeight += rc.Height();
-                pszRect[i] = rc;
-
-            }
-            nTotalHeight += nSpaceWidth * (nLen - 1);
-
-            CRect rcNew(0, 0, nMaxWidth, nTotalHeight);
-            CPoint ptOff = rcItem.CenterPoint() - rcNew.CenterPoint();
-            rcNew.MoveToXY(ptOff.x, ptOff.y);
-
-            CRect rc(rcNew.left, rcNew.top, rcNew.left + pszRect[0].Width(), rcNew.top + pszRect[0].Height() + 1);
-            for (int i = 0; i < nLen; i++)
-            {
-				int nRet = 0;
-				if (GetStyle().m_nShadow != 0)
-				{
-					nRet = dc.DrawShadowText(
-						(LPCWSTR)strTabText + i, 
-						1, 
-						rc, 
-						DT_SINGLELINE | DT_CENTER | DT_VCENTER, 
-						dc.GetTextColor(), 
-						GetStyle().m_crShadow, 
-						2, 
-						2);
-				}
-
-				if (0 == nRet)
-	                dc.DrawText((LPCWSTR)strTabText + i, 1, rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
-                rc.OffsetRect(0, pszRect[i].Height() + nSpaceWidth);
-
-            }
-            if (pszRect != m_szRect)
-            {
-                delete []pszRect;
-                pszRect = NULL;
-            }
-
-
-        }
-        else
-        {
-			int nRet = 0;
-			if (GetStyle().m_nShadow != 0)
-			{
-				nRet = dc.DrawShadowText(
-					strTabText, 
-					strTabText.GetLength(), 
-					rcItem, 
-					DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_TABSTOP, 
-					dc.GetTextColor(), 
-					GetStyle().m_crShadow, 
-					2, 
-					2);
-				
-			}
-			
-			if (0 == nRet)
-	            dc.DrawText(
-					strTabText, 
-					strTabText.GetLength(), 
-					rcItem, 
-					DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_TABSTOP);
-
-        }
-
     }
 
     void OnWindowPosChanged(LPWINDOWPOS lpWndPos)
@@ -730,9 +594,8 @@ public:
 
         SIZE sizeTab = {0, 0};
 
-        CBkSkinBase *pSkinTab = BkSkin::GetSkin(m_strSkinTab);
-        if (pSkinTab)
-            sizeTab = pSkinTab->GetSkinSize();
+        if (m_pSkinTab)
+            sizeTab = m_pSkinTab->GetSkinSize();
 
         if (0 != m_nTabHeight)
             sizeTab.cy = m_nTabHeight;
@@ -750,7 +613,7 @@ public:
             break;
         }
 
-        m_rcClient.DeflateRect(GetStyle().m_nMarginX, GetStyle().m_nMarginY);
+        m_rcClient.DeflateRect(m_style.m_nMarginX, m_style.m_nMarginY);
 
         for (int i = 0; i < (int)m_lstPages.GetCount(); i ++)
         {
@@ -866,30 +729,18 @@ protected:
         BKWIN_INT_ATTRIBUTE("tabheight", m_nTabHeight, FALSE)
         BKWIN_INT_ATTRIBUTE("tabpos", m_nTabPos, FALSE)
         BKWIN_INT_ATTRIBUTE("tabspacing", m_nTabSpacing, FALSE)
-        BKWIN_INT_ATTRIBUTE("vertfont", m_nVertFont, FALSE)//add bu xjx 2011-06-21
-        BKWIN_STRING_ATTRIBUTE("tabskin", m_strSkinTab, TRUE)
-        BKWIN_STRING_ATTRIBUTE("frameskin", m_strSkinFrame, TRUE)
-        BKWIN_STRING_ATTRIBUTE("iconskin", m_strSkinIcon, TRUE)
-        BKWIN_STRING_ATTRIBUTE("splitterskin", m_strSkinSplitter, TRUE)
-//         BKWIN_SKIN_ATTRIBUTE("tabskin", m_pSkinTab, FALSE)
-//         BKWIN_SKIN_ATTRIBUTE("frameskin", m_pSkinFrame, FALSE)
-//         BKWIN_SKIN_ATTRIBUTE("iconskin", m_pSkinIcon, FALSE)
-//         BKWIN_SKIN_ATTRIBUTE("splitterskin", m_pSkinSplitter, FALSE)
+        BKWIN_SKIN_ATTRIBUTE("tabskin", m_pSkinTab, FALSE)
+        BKWIN_SKIN_ATTRIBUTE("frameskin", m_pSkinFrame, FALSE)
+        BKWIN_SKIN_ATTRIBUTE("iconskin", m_pSkinIcon, FALSE)
+        BKWIN_SKIN_ATTRIBUTE("splitterskin", m_pSkinSplitter, FALSE)
         BKWIN_INT_ATTRIBUTE("framepos", m_nFramePos, FALSE)
         BKWIN_INT_ATTRIBUTE("icon-x", m_ptIcon.x, FALSE)
         BKWIN_INT_ATTRIBUTE("icon-y", m_ptIcon.y, FALSE)
         BKWIN_INT_ATTRIBUTE("text-x", m_ptText.x, FALSE)
         BKWIN_INT_ATTRIBUTE("text-y", m_ptText.y, FALSE)
-		BKWIN_COLOR_ATTRIBUTE("tabtext", m_crTabText, FALSE)
-		BKWIN_FONT_ATTRIBUTE("Selfont", m_ftSel, FALSE)
         BKWIN_ENUM_ATTRIBUTE("tabalign", int, TRUE)
             BKWIN_ENUM_VALUE("top", AlignTop)
             BKWIN_ENUM_VALUE("left", AlignLeft)
         BKWIN_ENUM_END(m_nTabAlign)
     BKWIN_DECLARE_ATTRIBUTES_END()
-
-private:
-
-    //add by xjx
-    CRect m_szRect[MAX_RECT_NUM];
 };

@@ -8,7 +8,6 @@
 #pragma once
 
 #include <atlcoll.h>
-#include <wtl/atlmisc.h>
 
 #define BKF_BOLD        0x0004U
 #define BKF_UNDERLINE   0x0002U
@@ -38,9 +37,10 @@ protected:
 
 public:
     BkFontPool()
-		: m_strFaceName(L"ËÎÌå")
-		, m_lFontSize(-12)
+        : m_strFaceName(_T("Tahoma"))
+        , m_lFontSize(-11)
     {
+        m_mapFont[BKF_DEFAULTFONT] = _GetDefaultGUIFont();
     }
     virtual ~BkFontPool()
     {
@@ -97,92 +97,6 @@ public:
         return _Instance()->m_mapFont.GetCount();
     }
 
-	static BOOL IsYaHei()
-	{
-		return (_Instance()->m_strFaceName == _T("Î¢ÈíÑÅºÚ") || _Instance()->m_strFaceName == _T("Microsoft YaHei"));
-	}
-
-	static void GetFontInfo( CString& strFaceName, LONG& lSize )
-	{
-		strFaceName = _Instance()->m_strFaceName;
-		lSize = _Instance()->m_lFontSize;
-	}
-
-	static int GetFontSizeAdding(HFONT hft)
-	{
-		LOGFONT lf;
-		::GetObject(hft, sizeof(LOGFONT), &lf);
-
-		return _Instance()->m_lfDefault.lfHeight - lf.lfHeight;
-	}
-
-	static int GetDefaultFontSize()
-	{
-		return abs(_Instance()->m_lfDefault.lfHeight);
-	}
-
-	static void Draw(
-		CDCHandle&	dc, 
-		LPCWSTR		lpstrText, 
-		int			cchText, 
-		LPRECT		lpRect, 
-		int			nTextAlign,
-		bool		bShadow = false,
-		COLORREF	crText = RGB(0, 0, 0),
-		COLORREF	crShadow = RGB(0, 0, 0))
-	{
-		CRect rcText = lpRect;
-		if (IsYaHei())
-		{
-			int nAddSize = GetFontSizeAdding(dc.GetCurrentFont());
-
-			if ((nTextAlign & DT_BOTTOM) == DT_BOTTOM)
-			{
-				rcText.top -= 2 * (nAddSize + 1); 
-				rcText.bottom -= 2 * (nAddSize + 1);
-
-				int nMinHeight = GetDefaultFontSize() + nAddSize + 2 * (nAddSize + 2);
-				if (rcText.Height() < nMinHeight)
-				{
-					rcText.bottom += nMinHeight - rcText.Height();
-				}
-			}
-			else if ((nTextAlign & DT_VCENTER) == DT_VCENTER)
-			{
-				rcText.top -= 0; 
-				rcText.bottom -= 0;
-			}
-			else
-			{
-				rcText.top -= 3 * (nAddSize + 1); 
-				rcText.bottom -= 3 * (nAddSize + 1);
-
-				int nMinHeight = GetDefaultFontSize() + nAddSize + 2 * (nAddSize + 2);
-				if (rcText.Height() < nMinHeight)
-				{
-					rcText.bottom += nMinHeight - rcText.Height();
-				}
-			}
-		}
-
-		int nRetCode = 0;
-		if (bShadow)
-		{
-			nRetCode = dc.DrawShadowText(
-				lpstrText, 
-				cchText, 
-				rcText, 
-				nTextAlign,
-				crText, 
-				crShadow, 
-				2, 
-				2);
-		}
-
-		if (0 == nRetCode)
-			nRetCode = dc.DrawText(lpstrText, cchText, rcText, nTextAlign);
-	}
-
 protected:
 
     LOGFONT m_lfDefault;
@@ -195,60 +109,20 @@ protected:
     static BkFontPool* _Instance()
     {
         if (!ms_pInstance)
-		{
             ms_pInstance = new BkFontPool;
-
-			if (IsFontExist(L"Î¢ÈíÑÅºÚ (TrueType)"))
-			{
-				ms_pInstance->m_strFaceName = _T("Î¢ÈíÑÅºÚ");
-			}
-			else if (IsFontExist(L"Microsoft YaHei (TrueType)"))
-			{
-				ms_pInstance->m_strFaceName = _T("Microsoft YaHei");
-			}
-			else if (IsFontExist(L"ËÎÌå & ÐÂËÎÌå (TrueType)"))
-			{
-				ms_pInstance->m_strFaceName = _T("ËÎÌå");
-			}
-			else if (IsFontExist(L"SimSun & NSimSun (TrueType)"))
-			{
-				ms_pInstance->m_strFaceName = _T("SimSun");
-			}
-
-			SetDefaultFont(ms_pInstance->m_strFaceName, ms_pInstance->m_lFontSize);
-		}
         return ms_pInstance;
     }
 
-	static BOOL IsFontExist(LPCTSTR lpFontName)
-	{
-		CRegKey RegOp;
-		TCHAR	szValue[MAX_PATH] = _T("");
-		DWORD	dwSize = MAX_PATH;
-
-
-		if (ERROR_SUCCESS == RegOp.Open(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"), KEY_READ)
-			&& ERROR_SUCCESS == RegOp.QueryStringValue(lpFontName, szValue, &dwSize))
-		{
-			return TRUE;
-		}
-
-		return FALSE;
-	}
-
     HFONT _GetDefaultGUIFont()
     {
+        DWORD dwSysVer = ::GetVersion();
+
         ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), &m_lfDefault);
 
         m_lfDefault.lfHeight = _GetFontAbsHeight(m_lFontSize);
-        _tcscpy_s(m_lfDefault.lfFaceName, m_strFaceName);
+        _tcscpy(m_lfDefault.lfFaceName, m_strFaceName);
 
-		if (m_strFaceName == _T("Î¢ÈíÑÅºÚ") || m_strFaceName == _T("Microsoft YaHei"))
-		{
-			m_lfDefault.lfQuality = CLEARTYPE_QUALITY;
-		}
-		else
-			m_lfDefault.lfQuality = ANTIALIASED_QUALITY;
+        m_lfDefault.lfQuality = ANTIALIASED_QUALITY;
 
         return ::CreateFontIndirect(&m_lfDefault);
     }

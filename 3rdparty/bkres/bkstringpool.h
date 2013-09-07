@@ -44,31 +44,16 @@ public:
 
     static BOOL Load(UINT uResID)
     {
-        CAtlList<CStringA> lstStrXml;
-
-        _Instance()->m_mapString.RemoveAll();
-
-        BOOL bRet = BkResManager::LoadResourceAtAll(uResID, lstStrXml, BKRES_TYPE);
+        CStringA strXml;
+        BOOL bRet = FALSE;
+        
+        bRet = BkResManager::LoadResource(uResID, strXml);
         if (!bRet)
             return FALSE;
 
-        POSITION pos = lstStrXml.GetHeadPosition();
-
-        while (pos)
-        {
-            bRet |= LoadStrings(lstStrXml.GetNext(pos));
-        }
-
-        return bRet;
-    }
-
-    static BOOL LoadStrings(LPCSTR lpszXml)
-    {
-        BOOL bRet = FALSE;
-        
         TiXmlDocument xmlDoc;
 
-        xmlDoc.Parse(lpszXml, NULL, TIXML_ENCODING_UTF8);
+        xmlDoc.Parse(strXml, NULL, TIXML_ENCODING_UTF8);
 
         if (xmlDoc.Error())
             return FALSE;
@@ -92,7 +77,6 @@ public:
 
             uStringID = (UINT)(ULONG)::StrToIntA(lpszStringID);
 
-            if (NULL == _Instance()->m_mapString.Lookup(uStringID))
             {
                 _Instance()->m_mapString[uStringID] = CA2T(pXmlChild->GetText(), CP_UTF8);
             }

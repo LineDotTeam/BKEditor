@@ -64,19 +64,17 @@ protected:
         WINDOWPOS WndPos;
         CRect rcChild;
 
-        const BkStyle& theStyle = GetStyle();
-
-        LONG lNextLineTop = lpWndPos->y + theStyle.m_nMarginY + theStyle.m_nLineSpacing;
+        LONG lNextLineTop = lpWndPos->y + m_style.m_nMarginY + m_style.m_nLineSpacing;
         LONG lMaxRight = m_rcWindow.right;
         LONG lMaxBottom = m_rcWindow.top;
         BOOL bFirstInBlock = TRUE, bNewLine = FALSE;
 
         memcpy(&WndPos, lpWndPos, sizeof(WINDOWPOS));
 
-        WndPos.x += theStyle.m_nMarginX;
-        WndPos.y += theStyle.m_nMarginY;
-        WndPos.cx = ((GetPositionType() & SizeX_Specify) ? m_lSpecifyWidth : WndPos.cx) - theStyle.m_nMarginX * 2;
-        WndPos.cy -= theStyle.m_nMarginY * 2;
+        WndPos.x += m_style.m_nMarginX;
+        WndPos.y += m_style.m_nMarginY;
+        WndPos.cx = ((GetPositionType() & SizeX_Specify) ? m_lSpecifyWidth : WndPos.cx) - m_style.m_nMarginX * 2;
+        WndPos.cy -= m_style.m_nMarginY * 2;
 
         while (pos != NULL)
         {
@@ -99,10 +97,10 @@ protected:
                 _ProcessLineVAlign(posThisLineStart, posPrev, WndPos.y, lNextLineTop);
                 posThisLineStart = posPrev;
 
-                WndPos.x = lpWndPos->x + theStyle.m_nMarginX;
-                WndPos.y = lNextLineTop + theStyle.m_nLineSpacing;
-                WndPos.cx = ((GetPositionType() & SizeX_Specify) ? m_lSpecifyWidth : lpWndPos->cx) - theStyle.m_nMarginX * 2;
-                WndPos.cy = lpWndPos->y + lpWndPos->cy - WndPos.y - theStyle.m_nMarginY;
+                WndPos.x = lpWndPos->x + m_style.m_nMarginX;
+                WndPos.y = lNextLineTop + m_style.m_nLineSpacing;
+                WndPos.cx = ((GetPositionType() & SizeX_Specify) ? m_lSpecifyWidth : lpWndPos->cx) - m_style.m_nMarginX * 2;
+                WndPos.cy = lpWndPos->y + lpWndPos->cy - WndPos.y - m_style.m_nMarginY;
 
                 bFirstInBlock = FALSE;
 
@@ -134,27 +132,27 @@ protected:
             if (bNewLine)
             {
                 // Reposition this control to next line
-                WndPos.x = lpWndPos->x + theStyle.m_nMarginX;
-                WndPos.y = lNextLineTop + theStyle.m_nLineSpacing;
-                WndPos.cx = ((GetPositionType() & SizeX_Specify) ? m_lSpecifyWidth : lpWndPos->cx) - theStyle.m_nMarginX * 2;
-                WndPos.cy = lpWndPos->y + lpWndPos->cy - WndPos.y - theStyle.m_nMarginY;
+                WndPos.x = lpWndPos->x + m_style.m_nMarginX;
+                WndPos.y = lNextLineTop + m_style.m_nLineSpacing;
+                WndPos.cx = ((GetPositionType() & SizeX_Specify) ? m_lSpecifyWidth : lpWndPos->cx) - m_style.m_nMarginX * 2;
+                WndPos.cy = lpWndPos->y + lpWndPos->cy - WndPos.y - m_style.m_nMarginY;
 
                 pBkWndChild->BkSendMessage(WM_WINDOWPOSCHANGED, NULL, (LPARAM)&WndPos);
                 pBkWndChild->GetRect(rcChild);
             }
 
             // Next control position
-            WndPos.x += rcChild.Width() + theStyle.m_nSpacing;
-            WndPos.cx -= rcChild.Width() + theStyle.m_nSpacing;
+            WndPos.x += rcChild.Width() + m_style.m_nSpacing;
+            WndPos.cx -= rcChild.Width() + m_style.m_nSpacing;
 
             if (lNextLineTop < rcChild.bottom)
             {
                 lNextLineTop = rcChild.bottom;
             }
 
-            if (lMaxRight < rcChild.right + theStyle.m_nMarginX)
+            if (lMaxRight < rcChild.right + m_style.m_nMarginX)
             {
-                lMaxRight = rcChild.right + theStyle.m_nMarginX;
+                lMaxRight = rcChild.right + m_style.m_nMarginX;
             }
         }
 
@@ -180,7 +178,7 @@ protected:
             m_rcWindow.bottom = lpWndPos->y + lpWndPos->cy;
             break;
         case SizeY_FitContent:
-            m_rcWindow.bottom = lNextLineTop + theStyle.m_nMarginY;
+            m_rcWindow.bottom = lNextLineTop + m_style.m_nMarginY;
             break;
         case SizeY_Specify:
             m_rcWindow.bottom = lpWndPos->y + m_lSpecifyHeight;
@@ -204,10 +202,10 @@ protected:
 
             memcpy(&WndPos, lpWndPos, sizeof(WINDOWPOS));
 
-            WndPos.x += theStyle.m_nMarginX;
-            WndPos.y += theStyle.m_nMarginY;
-            WndPos.cx = ((GetPositionType() & SizeX_Specify) ? m_lSpecifyWidth : WndPos.cx) - theStyle.m_nMarginX * 2;
-            WndPos.cy -= theStyle.m_nMarginY * 2;
+            WndPos.x += m_style.m_nMarginX;
+            WndPos.y += m_style.m_nMarginY;
+            WndPos.cx = ((GetPositionType() & SizeX_Specify) ? m_lSpecifyWidth : WndPos.cx) - m_style.m_nMarginX * 2;
+            WndPos.cy -= m_style.m_nMarginY * 2;
 
             pBkWndChild->BkSendMessage(WM_WINDOWPOSCHANGED, NULL, (LPARAM)&WndPos);
             pBkWndChild->GetRect(rcChild);
@@ -490,32 +488,25 @@ public:
         COLORREF crOld = CLR_INVALID, crOldBg = CLR_INVALID, crDraw = CLR_INVALID;
         CRect rcText = m_rcWindow;
         int nOldBkMode = OPAQUE;
-        const BkStyle& theStyle = GetStyle();
 
-        if (!theStyle.m_strSkinName.IsEmpty())
+        if (!m_style.m_strSkinName.IsEmpty())
             nOldBkMode = dc.SetBkMode(TRANSPARENT);
-        if (CLR_INVALID != m_crBg)
-            crOldBg = dc.SetBkColor(m_crBg);
-        else if (CLR_INVALID != theStyle.m_crBg)
-            crOldBg = dc.SetBkColor(theStyle.m_crBg);
+        if (CLR_INVALID != m_style.m_crBg)
+            crOldBg = dc.SetBkColor(m_style.m_crBg);
 
-        if (m_ftText)
-            hftDraw = m_ftText;
-        else if (theStyle.m_ftText)
-            hftDraw = theStyle.m_ftText;
+        if (m_style.m_ftText)
+            hftDraw = m_style.m_ftText;
 
-        if (m_crText != CLR_INVALID)
-            crDraw = m_crText;
-        else if (theStyle.m_crText != CLR_INVALID)
-            crDraw = theStyle.m_crText;
+        if (m_style.m_crText != CLR_INVALID)
+            crDraw = m_style.m_crText;
 
         if (BkWndState_Hover == (GetState() & BkWndState_Hover))
         {
-            if (theStyle.m_ftHover)
-                hftDraw = theStyle.m_ftHover;
+            if (m_style.m_ftHover)
+                hftDraw = m_style.m_ftHover;
 
-            if (theStyle.m_crHoverText != CLR_INVALID)
-                crDraw = theStyle.m_crHoverText;
+            if (m_style.m_crHoverText != CLR_INVALID)
+                crDraw = m_style.m_crHoverText;
         }
 
         if (hftDraw)
@@ -564,12 +555,12 @@ public:
         if (hftDraw)
             dc.SelectFont(hftOld);
 
-        if (crOld != CLR_INVALID)
+        if (crDraw != CLR_INVALID)
             dc.SetTextColor(crOld);
 
-        if (!theStyle.m_strSkinName.IsEmpty())
+        if (!m_style.m_strSkinName.IsEmpty())
             dc.SetBkMode(nOldBkMode);
-        if (CLR_INVALID != crOldBg)
+        if (CLR_INVALID != m_style.m_crBg)
             dc.SetBkColor(crOldBg);
     }
 
@@ -600,10 +591,30 @@ public:
         ShowAllRealWindowChilds(bShow);
     }
 
+    void OnLButtonDown(UINT nFlags, CPoint point)
+    {
+        POSITION pos = m_lstWndChild.GetHeadPosition();
+        CRect rcChild;
+
+        while (pos != NULL)
+        {
+            CBkWindow *pBkWndChild = m_lstWndChild.GetNext(pos);
+            if (!pBkWndChild->IsVisible())
+                continue;
+
+            pBkWndChild->GetRect(rcChild);
+
+            if (rcChild.PtInRect(point))
+            {
+                pBkWndChild->BkSendMessage(WM_LBUTTONDOWN, (WPARAM)nFlags, (LPARAM)MAKELONG(point.x, point.y));
+            }
+        }
+    }
+
 protected:
 
     BKWIN_DECLARE_ATTRIBUTES_BEGIN()
-        BKWIN_INT_ATTRIBUTE("onlydrawchild", m_bOnlyDrawChild, FALSE)
+        BKWIN_INT_ATTRIBUTE("onlydrawchild", m_bOnlyDrawChild, TRUE)
     BKWIN_DECLARE_ATTRIBUTES_END()
 
     BKWIN_BEGIN_MSG_MAP()
@@ -612,11 +623,13 @@ protected:
         MSG_WM_WINDOWPOSCHANGED(OnWindowPosChanged)
         MSG_WM_DESTROY(OnDestroy)
         MSG_WM_MOUSEMOVE(OnMouseMove)
+        MSG_WM_LBUTTONDOWN(OnLButtonDown)
         MSG_WM_SHOWWINDOW(OnShowWindow)
     BKWIN_END_MSG_MAP()
 };
 
 #include "bkwnddlg.h"
+#include "bkwnddlgfile.h"
 #include "bkwndtabctrl.h"
 
 inline CBkWindow* CBkPanel::_CreateBkWindowByName(LPCSTR lpszName)
@@ -630,6 +643,10 @@ inline CBkWindow* CBkPanel::_CreateBkWindowByName(LPCSTR lpszName)
     pNewWindow = CBkDialog::CheckAndNew(lpszName);
     if (pNewWindow)
         return pNewWindow;
+
+	pNewWindow = CBkDialogFile::CheckAndNew(lpszName);
+	if (pNewWindow)
+		return pNewWindow;
 
     pNewWindow = CBkStatic::CheckAndNew(lpszName);
     if (pNewWindow)
@@ -655,17 +672,9 @@ inline CBkWindow* CBkPanel::_CreateBkWindowByName(LPCSTR lpszName)
     if (pNewWindow)
         return pNewWindow;
 
-	pNewWindow = CBkProgressEx::CheckAndNew(lpszName);
-	if (pNewWindow)
-		return pNewWindow;
-
     pNewWindow = CBkImageBtnWnd::CheckAndNew(lpszName);
     if (pNewWindow)
         return pNewWindow;
-
-	pNewWindow = CBkSkinBtnWnd::CheckAndNew(lpszName);
-	if (pNewWindow)
-		return pNewWindow;
 
     pNewWindow = CBkRealWnd::CheckAndNew(lpszName);
     if (pNewWindow)
@@ -699,13 +708,13 @@ inline CBkWindow* CBkPanel::_CreateBkWindowByName(LPCSTR lpszName)
     if (pNewWindow)
         return pNewWindow;
 
-    pNewWindow = CBkMemoryImage::CheckAndNew(lpszName);
-    if (pNewWindow)
-        return pNewWindow;
+	pNewWindow = CBkMemoryImage::CheckAndNew(lpszName);
+	if (pNewWindow)
+		return pNewWindow;
 
-    pNewWindow = CBkDialogButton::CheckAndNew(lpszName);
-    if (pNewWindow)
-        return pNewWindow;
+	pNewWindow = CBkImageListHWnd::CheckAndNew(lpszName);
+	if (pNewWindow)
+		return pNewWindow;
 
     return NULL;
 }
@@ -729,7 +738,7 @@ inline void CBkPanel::ShowAllRealWindowChilds(BOOL bShow)
         {
             ((CBkRealWnd *)pBkWndChild)->ShowRealWindow(bShow && bChildVisible);
         }
-        else if (pBkWndChild->IsClass(CBkPanel::GetClassName()) || pBkWndChild->IsClass(CBkDialog::GetClassName()) || pBkWndChild->IsClass(CBkDialogButton::GetClassName()))
+        else if (pBkWndChild->IsClass(CBkPanel::GetClassName()) || pBkWndChild->IsClass(CBkDialog::GetClassName()) || pBkWndChild->IsClass(CBkDialogFile::GetClassName()) )
         {
             ((CBkPanel *)pBkWndChild)->ShowAllRealWindowChilds(bShow && bChildVisible);
         }

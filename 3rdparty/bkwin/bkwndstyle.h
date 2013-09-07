@@ -29,9 +29,6 @@ public:
         , m_nSpacing(0)
         , m_nLineSpacing(20)
         , m_lpCursorName(IDC_ARROW)
-		, m_nShadow(0)
-		, m_nGdiplus(0)
-		, m_crShadow(RGB(1, 1, 1))
     {
     }
 
@@ -57,9 +54,6 @@ public:
     int m_nLineSpacing;
     LPCTSTR m_lpCursorName;
     CStringA m_strSkinName;
-	int m_nShadow;
-	int m_nGdiplus;
-	COLORREF m_crShadow;
 
     // Get class name
     LPCSTR GetName()
@@ -81,28 +75,22 @@ public:
 
     static BOOL LoadStyles(UINT uResID)
     {
-        CAtlList<CStringA> lstStrXml;
+        CStringA strXml;
+        BOOL bRet = BkResManager::LoadResource(uResID, strXml);
 
-        _GetStylePool()->RemoveAll();
-        (*_GetStylePool())[""];
-
-        BOOL bRet = BkResManager::LoadResourceAtAll(uResID, lstStrXml, BKRES_TYPE);
         if (!bRet)
             return FALSE;
 
-        POSITION pos = lstStrXml.GetHeadPosition();
-
-        while (pos)
-        {
-            bRet |= LoadStyles(lstStrXml.GetNext(pos));
-        }
-
-        return bRet;
+        return LoadStyles(strXml);
     }
 
     static BOOL LoadStyles(LPCSTR lpszXml)
     {
         TiXmlDocument xmlDoc;
+
+        _GetStylePool()->RemoveAll();
+
+        (*_GetStylePool())[""];
 
         xmlDoc.Parse(lpszXml, NULL, TIXML_ENCODING_UTF8);
 
@@ -158,8 +146,7 @@ protected:
             if (!lpszClassName)
                 continue;
 
-            if (NULL == (*_GetStylePool()).Lookup(lpszClassName))
-                (*_GetStylePool())[lpszClassName].Load(pXmlChild);
+            (*_GetStylePool())[lpszClassName].Load(pXmlChild);
         }
     }
 
@@ -179,9 +166,6 @@ protected:
         BKWIN_INT_ATTRIBUTE("margin", m_nMarginX = m_nMarginY, TRUE) // 这样比较bt，不过.....凑合用吧
         BKWIN_INT_ATTRIBUTE("spacing", m_nSpacing, TRUE)
         BKWIN_INT_ATTRIBUTE("linespacing", m_nLineSpacing, TRUE)
-		BKWIN_INT_ATTRIBUTE("shadow", m_nShadow, TRUE)
-		BKWIN_INT_ATTRIBUTE("gdiplus", m_nGdiplus, TRUE)
-		BKWIN_COLOR_ATTRIBUTE("crshadow", m_crShadow, FALSE)
         BKWIN_ENUM_ATTRIBUTE("cursor", LPCTSTR, FALSE)
             BKWIN_ENUM_VALUE("hand", IDC_HAND)
             BKWIN_ENUM_VALUE("arrow", IDC_ARROW)

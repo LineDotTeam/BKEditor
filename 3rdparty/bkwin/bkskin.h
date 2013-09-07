@@ -9,9 +9,8 @@
 
 #include "bkobject.h"
 #include "bkimage.h"
-#include <bkres/bkbmppool.h>
 #include <bkres/bkpngpool.h>
-#include <bkres/bkjpgpool.h>
+
 // State Define
 enum {
     BkWndState_Normal       = 0x00000000UL, 
@@ -34,14 +33,8 @@ enum {
 class CBkSkinBase : public CBkObject
 {
 public:
-	CBkSkinBase()
-	{
-		m_bLoaded = FALSE;
-	}
     virtual void Draw(CDCHandle dc, CRect rcDraw, DWORD dwState) = NULL;
-	virtual void DrawImage(CDCHandle dc, CRect &rcDraw, CRect &rcSr)
-	{
-	}
+
     virtual SIZE GetSkinSize()
     {
         SIZE ret = {0, 0};
@@ -53,11 +46,6 @@ public:
     {
         return TRUE;
     }
-
-	virtual BOOL LoadImg()
-	{
-		return FALSE;
-	}
 
     enum {
         Frame_Part_All        = 0x0000002FUL, 
@@ -150,7 +138,7 @@ public:
             imgDraw.BitBlt(
                 dc, 
                 rcDraw.left, rcClient.bottom, 
-                lSkinLeft, sizeSkin.cy - lSkinTop - 1, 
+                lSkinLeft, lSkinTop, 
                 0, lSkinTop + 1, 
                 SRCCOPY
                 );
@@ -160,7 +148,7 @@ public:
             imgDraw.BitBlt(
                 dc, 
                 rcClient.right, rcClient.bottom, 
-                sizeSkin.cx - lSkinLeft - 1, sizeSkin.cy - lSkinTop - 1, 
+                sizeSkin.cx - lSkinLeft - 1, lSkinTop, 
                 lSkinLeft + 1, lSkinTop + 1, 
                 SRCCOPY
                 );
@@ -306,7 +294,6 @@ public:
 
         GradientFillRectH(hdc, rcFill, frgDraw, 2);
     }
-	BOOL m_bLoaded;
 };
 
 class CBkImageSkin
@@ -317,62 +304,25 @@ class CBkImageSkin
 
 public:
     CBkImageSkin()
-		: m_lstretchX(0), m_lstretchY(0)
     {
 
     }
 
     virtual void Draw(CDCHandle dc, CRect rcDraw, DWORD dwState)
     {
-		if (!m_bLoaded)
-		{
-			return;
-		}
-		// 支持缩放显示。 by ZC. 2010-11-2。
-		if (0 != m_lstretchX && 0 != m_lstretchY)
-		{
-			int nSubImage = dwState;
-			int nSrcPosX = 0, nSrcPosY = 0, nSrcWidth = 0, nSrcHeight = 0;
-
-			BITMAP bmp = { 0 }; 
-			GetBitmap(&bmp);
-
-			nSrcHeight = bmp.bmHeight;
-
-			if (-1 == nSubImage)
-				nSrcWidth = bmp.bmWidth;
-			else
-				nSrcWidth = m_lSubImageWidth;
-			
-			dc.SetStretchBltMode(COLORONCOLOR) ;
-			CBkImage::StretchBlt(dc, rcDraw.left, rcDraw.top, m_lstretchX, m_lstretchY, nSrcPosX, nSrcPosY, nSrcWidth, nSrcHeight, SRCCOPY, nSubImage);
-		}
-		else
-		{
-			CBkImage::Draw(dc, rcDraw.left, rcDraw.top, dwState);
-		}
+        CBkImage::Draw(dc, rcDraw.left, rcDraw.top, dwState);
     }
 
     virtual SIZE GetSkinSize()
     {
-		// 支持缩放显示。 by ZC. 2010-11-2。
-		if (0 != m_lstretchX && 0 != m_lstretchY)
-		{
-			SIZE ret = {m_lstretchX, m_lstretchY};
+        SIZE ret = {0, 0};
 
-			return ret;
-		}
-		
-		{
-			SIZE ret = {0, 0};
+        GetImageSize(ret);
 
-			GetImageSize(ret);
+        if (0 != m_lSubImageWidth)
+            ret.cx = m_lSubImageWidth;
 
-			if (0 != m_lSubImageWidth)
-				ret.cx = m_lSubImageWidth;
-
-			return ret;
-		}
+        return ret;
     }
 
     virtual BOOL IgnoreState()
@@ -380,25 +330,10 @@ public:
         return (0 == m_lSubImageWidth);
     }
 
-    HRESULT OnSrcChange(CStringA& strValue, BOOL bLoading)
-    {
-		m_strSrc = strValue;
-
-        return S_OK;
-    }
-
-	BOOL LoadImg()
-	{
-		if (m_bLoaded)
-			return TRUE;
-		Attach(BkBmpPool::GetBitmap((UINT)::StrToIntA(m_strSrc)));
-		m_bLoaded = TRUE;
-		return m_bLoaded;
-	}
 protected:
 
     BKWIN_DECLARE_ATTRIBUTES_BEGIN()
-        BKWIN_CUSTOM_ATTRIBUTE("src", OnSrcChange)
+        BKWIN_UINT_ATTRIBUTE("src", *(CBkImage *)(this), TRUE)
         BKWIN_ENUM_ATTRIBUTE("mode", int, TRUE)
         BKWIN_ENUM_VALUE("none", CBkImage::ModeNone)
         BKWIN_ENUM_VALUE("mask", CBkImage::ModeMaskColor)
@@ -406,13 +341,7 @@ protected:
         BKWIN_ENUM_END(m_nTransparentMode)
         BKWIN_COLOR_ATTRIBUTE("maskcolor", m_crMask, TRUE)
         BKWIN_INT_ATTRIBUTE("subwidth", m_lSubImageWidth, TRUE)
-		BKWIN_INT_ATTRIBUTE("stretch-x", m_lstretchX, 0)
-		BKWIN_INT_ATTRIBUTE("stretch-y", m_lstretchY, 0)
     BKWIN_DECLARE_ATTRIBUTES_END()
-protected:
-	LONG m_lstretchX; 
-	LONG m_lstretchY;
-	CStringA m_strSrc;
 };
 
 class CBkSkinImgFrame : public CBkSkinBase
@@ -430,10 +359,6 @@ public:
 
     virtual void Draw(CDCHandle dc, CRect rcDraw, DWORD dwState)
     {
-		if (!m_bLoaded)
-		{
-			return;
-		}
         if (m_imgSkin.M_HOBJECT)
         {
             FrameDraw(dc, m_imgSkin, rcDraw, m_lSkinParamLeft, m_lSkinParamTop, m_crBg, m_uDrawPart);
@@ -444,12 +369,6 @@ public:
     {
         return m_imgSkin.IgnoreState();
     }
-
-	virtual BOOL LoadImg()
-	{
-		m_bLoaded = m_imgSkin.LoadImg();
-		return m_bLoaded;
-	}
 
 protected:
     CBkImageSkin m_imgSkin;
@@ -493,11 +412,6 @@ public:
 
     virtual void Draw(CDCHandle dc, CRect rcDraw, DWORD dwState)
     {
-		if (!m_bLoaded)
-		{
-			return;
-		}
-
         if (m_imgSkin.M_HOBJECT)
         {
 //             m_imgSkin.SetSubImageWidth(m_lSkinSubWidth);
@@ -529,11 +443,6 @@ public:
         return m_imgSkin.IgnoreState();
     }
 
-	virtual BOOL LoadImg()
-	{
-		m_bLoaded = m_imgSkin.LoadImg();
-		return m_bLoaded;
-	}
 protected:
     CBkImageSkin m_imgSkin;
 //     LONG m_lSkinSubWidth;
@@ -724,12 +633,6 @@ public:
         : m_uResID(0)
         , m_lSubImageWidth(0)
         , m_pImg(NULL)
-		, m_nLeft(0)
-		, m_nTop(0)
-		, m_nMarginLeft(0)
-		, m_nMarginRight(0)
-        , m_nMarginTop(0)
-        , m_nMarginBottom(0)
     {
     }
 
@@ -744,25 +647,13 @@ public:
         if (0 == m_uResID)
             return TRUE;
 
-        //m_pImg = BkPngPool::Get(m_uResID);
+        m_pImg = BkPngPool::Get(m_uResID);
 
         return TRUE;
     }
 
-	BOOL LoadImg()
-	{
-		if (m_bLoaded)
-			return TRUE;
-		m_pImg = BkPngPool::Get(m_uResID);
-		m_bLoaded = (m_pImg != NULL);
-		return m_bLoaded;
-	}
     virtual void Draw(CDCHandle dc, CRect rcDraw, DWORD dwState)
     {
-		if (!m_bLoaded)
-		{
-			return;
-		}
         if (m_pImg)
         {
             Gdiplus::Graphics graphics(dc);
@@ -778,128 +669,11 @@ public:
             }
 
             if (0 == m_lSubImageWidth)
-			{
-				if (m_nMarginLeft)
-				{
-					graphics.DrawImage(
-						m_pImg, 
-						Gdiplus::Rect(rcDraw.left, rcDraw.top, m_nMarginLeft, rcDraw.Height()), 
-						m_nLeft, 
-						m_nTop, 
-						m_nMarginLeft, 
-						rcDraw.Height(), 
-						Gdiplus::UnitPixel);
-				}
-                else if (m_nMarginTop)
-                {
-                    graphics.DrawImage(
-                        m_pImg, 
-                        Gdiplus::Rect(rcDraw.left, rcDraw.top, rcDraw.Width(), m_nMarginTop), 
-                        m_nLeft, 
-                        m_nTop, 
-                        rcDraw.Width(), 
-                        m_nMarginTop, 
-                        Gdiplus::UnitPixel);
-                }
-
-				if (m_nMarginTop || m_nMarginBottom)
-				{
-					graphics.DrawImage(
-						m_pImg, 
-						Gdiplus::Rect(rcDraw.left + m_nMarginLeft, rcDraw.top + m_nMarginTop, rcDraw.Width() - m_nMarginLeft - m_nMarginRight, rcDraw.Height() - m_nMarginTop - m_nMarginBottom), 
-						m_nLeft + m_nMarginLeft, 
-						m_nTop + m_nMarginTop, 
-						(size.cx < rcDraw.Width() ? size.cx : rcDraw.Width()) - m_nMarginLeft - m_nMarginRight, 
-						(size.cy < rcDraw.Height() ? size.cy : rcDraw.Height()) - m_nMarginTop - m_nMarginBottom, 
-						Gdiplus::UnitPixel);
-				}
-				else
-				{
-					graphics.DrawImage(
-						m_pImg, 
-						Gdiplus::Rect(rcDraw.left + m_nMarginLeft, rcDraw.top, rcDraw.Width() - m_nMarginLeft - m_nMarginRight, rcDraw.Height()), 
-						m_nLeft + m_nMarginLeft, 
-						m_nTop, 
-						(size.cx < rcDraw.Width() ? size.cx : rcDraw.Width()) - m_nMarginLeft - m_nMarginRight, 
-						rcDraw.Height(), 
-						Gdiplus::UnitPixel); 
-				}				               
-
-				if (m_nMarginRight)
-				{
-					graphics.DrawImage(
-						m_pImg, 
-						Gdiplus::Rect(rcDraw.right - m_nMarginRight, rcDraw.top, m_nMarginRight, rcDraw.Height()), 
-						size.cx - m_nMarginRight, 
-						m_nTop, 
-						m_nMarginRight, 
-						rcDraw.Height(), 
-						Gdiplus::UnitPixel);
-				}
-                else if (m_nMarginBottom)
-                {
-                    graphics.DrawImage(
-                        m_pImg, 
-                        Gdiplus::Rect(rcDraw.left, rcDraw.bottom - m_nMarginBottom, rcDraw.Width(), m_nMarginBottom), 
-                        m_nLeft, 
-                        size.cy - m_nMarginBottom, 
-                        rcDraw.Width(), 
-                        m_nMarginBottom, 
-                        Gdiplus::UnitPixel);
-                }
-			}
+                graphics.DrawImage(m_pImg, Gdiplus::Rect(rcDraw.left, rcDraw.top, size.cx, size.cy));
             else
-			{
-				int nBlock = m_pImg->GetWidth() / m_lSubImageWidth;
-				if (nBlock != 0)
-					dwState = dwState % nBlock;
                 graphics.DrawImage(m_pImg, Gdiplus::Rect(rcDraw.left, rcDraw.top, size.cx, size.cy), m_lSubImageWidth * dwState, 0, size.cx, size.cy, Gdiplus::UnitPixel);
-			}
         }
     }
-
-	virtual void DrawImage(CDCHandle dc, CRect &rcDraw, CRect &rcSr)
-	{
-		if (m_pImg)
-		{
-			Gdiplus::Graphics graphics(dc);
-			graphics.DrawImage(
-				m_pImg, 
-				Gdiplus::Rect(rcDraw.left, rcDraw.top, rcDraw.Width(), rcDraw.Height()), 
-				rcSr.left, rcSr.top, rcSr.Width(), rcSr.Height(), 
-				Gdiplus::UnitPixel);
-		}
-	}
-
-	virtual void DrawImage(CDCHandle dc, CRect &rcDraw, CRect &rcSr, int nAlpha)
-	{
-		if (m_pImg)
-		{
-			using namespace Gdiplus;
-			ImageAttributes imageAttrib;
-			const float fAlphaMax = 255;
-			float fAlpha = nAlpha / fAlphaMax;
-			ColorMatrix colorMatrix = 
-			{
-				1.0f,0.0f,0.0f,0.0f,0.0f,
-				0.0f,1.0f,0.0f,0.0f,0.0f,
-				0.0f,0.0f,1.0f,0.0f,0.0f,
-				0.0f,0.0f,0.0f,fAlpha,0.0f,
-				0.0f,0.0f,0.0f,0.0f,1.0f,
-			};
-
-			imageAttrib.SetColorMatrix(&colorMatrix,
-				ColorMatrixFlagsDefault,
-				ColorAdjustTypeDefault );
-
-			Graphics graphics(dc);
-			graphics.DrawImage(
-				m_pImg, 
-				Rect(rcDraw.left, rcDraw.top, rcDraw.Width(), rcDraw.Height()), 
-				rcSr.left, rcSr.top, rcSr.Width(), rcSr.Height(), 
-				UnitPixel, &imageAttrib);
-		}
-	}
 
     virtual SIZE GetSkinSize()
     {
@@ -925,181 +699,13 @@ protected:
 
     Gdiplus::Image* m_pImg;
     UINT m_uResID;
-	LONG m_lSubImageWidth;
-	int	 m_nLeft;
-	int	 m_nTop;
-	int	 m_nMarginLeft;
-	int	 m_nMarginRight;
-    int  m_nMarginTop;
-    int  m_nMarginBottom;
+    LONG m_lSubImageWidth;
 
     BKWIN_DECLARE_ATTRIBUTES_BEGIN()
         BKWIN_UINT_ATTRIBUTE("src", m_uResID, TRUE)
-		BKWIN_INT_ATTRIBUTE("subwidth", m_lSubImageWidth, TRUE)
-		BKWIN_INT_ATTRIBUTE("left", m_nLeft, TRUE)
-		BKWIN_INT_ATTRIBUTE("top", m_nTop, TRUE)
-		BKWIN_INT_ATTRIBUTE("margin_left", m_nMarginLeft, TRUE)
-		BKWIN_INT_ATTRIBUTE("margin_right", m_nMarginRight, TRUE)
-        BKWIN_INT_ATTRIBUTE("margin_top", m_nMarginTop, TRUE)           //增加margin_top、margin_bottom用于做png的垂直拉伸
-        BKWIN_INT_ATTRIBUTE("margin_bottom", m_nMarginBottom, TRUE)
+        BKWIN_INT_ATTRIBUTE("subwidth", m_lSubImageWidth, TRUE)
     BKWIN_DECLARE_ATTRIBUTES_END()
 };
-
-
-// 2011.6.20 by zyb
-class CBkJpgSkin
-	: public CBkSkinBase
-{
-	BKOBJ_DECLARE_CLASS_NAME(CBkJpgSkin, "jpg")
-
-public:
-	CBkJpgSkin()
-		: m_uResID(0)
-		, m_lSubImageWidth(0)
-		, m_pImg(NULL)
-		, m_nLeft(0)
-		, m_nTop(0)
-		, m_nMarginLeft(0)
-		, m_nMarginRight(0)
-	{
-	}
-
-	~CBkJpgSkin()
-	{
-	}
-
-	virtual BOOL Load(TiXmlElement* pXmlElem)
-	{
-		__super::Load(pXmlElem);
-
-		if (0 == m_uResID)
-			return TRUE;
-
-		return TRUE;
-	}
-
-	BOOL LoadImg()
-	{
-		if (m_bLoaded)
-			return TRUE;
-		m_pImg = BkJpgPool::Get(m_uResID);
-		m_bLoaded = (m_pImg != NULL);
-		return m_bLoaded;
-	}
-
-	virtual void Draw(CDCHandle dc, CRect rcDraw, DWORD dwState)
-	{
-		if (!m_bLoaded)
-		{
-			return;
-		}
-
-		if (m_pImg)
-		{
-			Gdiplus::Graphics graphics(dc);
-
-			SIZE size = {0, 0};
-			if (m_pImg)
-			{
-				if (0 == m_lSubImageWidth)
-					size.cx = m_pImg->GetWidth();
-				else
-					size.cx = m_lSubImageWidth;
-				size.cy = m_pImg->GetHeight();
-			}
-
-			if (0 == m_lSubImageWidth)
-			{
-				if (m_nMarginLeft)
-				{
-					graphics.DrawImage(
-						m_pImg, 
-						Gdiplus::Rect(rcDraw.left, rcDraw.top, m_nMarginLeft, rcDraw.Height()), 
-						m_nLeft, 
-						m_nTop, 
-						m_nMarginLeft, 
-						rcDraw.Height(), 
-						Gdiplus::UnitPixel);
-				}
-
-				graphics.DrawImage(
-					m_pImg, 
-					Gdiplus::Rect(rcDraw.left + m_nMarginLeft, rcDraw.top, rcDraw.Width() - m_nMarginLeft - m_nMarginRight, rcDraw.Height()), 
-					m_nLeft + m_nMarginLeft, 
-					m_nTop, 
-					(size.cx < rcDraw.Width() ? size.cx : rcDraw.Width()) - m_nMarginLeft - m_nMarginRight, 
-					rcDraw.Height(), 
-					Gdiplus::UnitPixel);
-
-				if (m_nMarginRight)
-				{
-					graphics.DrawImage(
-						m_pImg, 
-						Gdiplus::Rect(rcDraw.right - m_nMarginRight, rcDraw.top, m_nMarginRight, rcDraw.Height()), 
-						size.cx - m_nMarginRight, 
-						m_nTop, 
-						m_nMarginRight, 
-						rcDraw.Height(), 
-						Gdiplus::UnitPixel);
-				}
-			}
-			else
-				graphics.DrawImage(m_pImg, Gdiplus::Rect(rcDraw.left, rcDraw.top, size.cx, size.cy), m_lSubImageWidth * dwState, 0, size.cx, size.cy, Gdiplus::UnitPixel);
-		}
-	}
-
-	virtual void DrawImage(CDCHandle dc, CRect &rcDraw, CRect &rcSr)
-	{
-		if (m_pImg)
-		{
-			Gdiplus::Graphics graphics(dc);
-			graphics.DrawImage(
-				m_pImg, 
-				Gdiplus::Rect(rcDraw.left, rcDraw.top, rcDraw.Width(), rcDraw.Height()), 
-				rcSr.left, rcSr.top, rcSr.Width(), rcSr.Height(), 
-				Gdiplus::UnitPixel);
-		}
-	}
-
-	virtual SIZE GetSkinSize()
-	{
-		SIZE ret = {0, 0};
-		if (m_pImg)
-		{
-			if (0 == m_lSubImageWidth)
-				ret.cx = m_pImg->GetWidth();
-			else
-				ret.cx = m_lSubImageWidth;
-			ret.cy = m_pImg->GetHeight();
-		}
-
-		return ret;
-	}
-
-	virtual BOOL IgnoreState()
-	{
-		return 0 == m_lSubImageWidth;
-	}
-
-protected:
-	Gdiplus::Image* m_pImg;
-	UINT m_uResID;
-	LONG m_lSubImageWidth;
-	int	 m_nLeft;
-	int	 m_nTop;
-	int	 m_nMarginLeft;
-	int	 m_nMarginRight;
-
-	BKWIN_DECLARE_ATTRIBUTES_BEGIN()
-		BKWIN_UINT_ATTRIBUTE("src", m_uResID, TRUE)
-		BKWIN_INT_ATTRIBUTE("subwidth", m_lSubImageWidth, TRUE)
-		BKWIN_INT_ATTRIBUTE("left", m_nLeft, TRUE)
-		BKWIN_INT_ATTRIBUTE("top", m_nTop, TRUE)
-		BKWIN_INT_ATTRIBUTE("margin_left", m_nMarginLeft, TRUE)
-		BKWIN_INT_ATTRIBUTE("margin_right", m_nMarginRight, TRUE)
-	BKWIN_DECLARE_ATTRIBUTES_END()
-};
-
 
 class BkSkin
 {
@@ -1115,27 +721,20 @@ public:
 
     static BOOL LoadSkins(UINT uResID)
     {
-        CAtlList<CStringA> lstStrXml;
+        CStringA strXml;
+        BOOL bRet = BkResManager::LoadResource(uResID, strXml);
 
-        _Instance()->_Clear();
-
-        BOOL bRet = BkResManager::LoadResourceAtAll(uResID, lstStrXml, BKRES_TYPE);
         if (!bRet)
             return FALSE;
 
-        POSITION pos = lstStrXml.GetHeadPosition();
-
-        while (pos)
-        {
-            bRet |= LoadSkins(lstStrXml.GetNext(pos));
-        }
-
-        return bRet;
+        return LoadSkins(strXml);
     }
 
     static BOOL LoadSkins(LPCSTR lpszXml)
     {
         TiXmlDocument xmlDoc;
+
+        _Instance()->_Clear();
 
         xmlDoc.Parse(lpszXml, NULL, TIXML_ENCODING_UTF8);
 
@@ -1152,10 +751,7 @@ public:
         __BkSkinPool::CPair *pairRet = _Instance()->m_mapPool.Lookup(lpszSkinName);
 
         if (pairRet)
-		{
-			pairRet->m_value->LoadImg();
             return pairRet->m_value;
-		}
         else
             return NULL;
     }
@@ -1214,16 +810,16 @@ protected:
         {
             lpszSkinName = pXmlChild->Attribute("name");
             lpszTypeName = pXmlChild->Value();
-            if (!lpszSkinName || !lpszTypeName || NULL != m_mapPool.Lookup(lpszSkinName))
+            if (!lpszSkinName || !lpszTypeName)
                 continue;
-
 
             CBkSkinBase *pSkin = _CreateBkSkinByName(lpszTypeName);
             if (!pSkin)
                 continue;
 
             pSkin->Load(pXmlChild);
-            m_mapPool[lpszSkinName] = pSkin;
+
+            /*_Instance()->*/m_mapPool[lpszSkinName] = pSkin;
         }
     }
 
@@ -1254,11 +850,6 @@ protected:
         pNewSkin = CBkPngSkin::CheckAndNew(lpszName);
         if (pNewSkin)
             return pNewSkin;
-
-		pNewSkin = CBkJpgSkin::CheckAndNew(lpszName);
-		if (pNewSkin)
-			return pNewSkin;
-
 
         return NULL;
     }

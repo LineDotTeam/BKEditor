@@ -17,7 +17,18 @@ public:
     }
     virtual ~BkBmpPool()
     {
-        _Clear();
+        HBITMAP hbmp = NULL;
+
+        POSITION pos = m_mapBitmap.GetStartPosition();
+
+        while (pos != NULL) 
+        {
+            hbmp = m_mapBitmap.GetNextValue(pos);
+            if (hbmp)
+                ::DeleteObject(hbmp);
+        }
+
+        m_mapBitmap.RemoveAll();
     }
 
     typedef CAtlMap<UINT, HBITMAP> _TypeBitmapPool;
@@ -44,11 +55,6 @@ public:
         return _Instance()->m_mapBitmap.GetCount();
     }
 
-    static void Reload()
-    {
-        return _Instance()->_Clear();
-    }
-
 protected:
     _TypeBitmapPool m_mapBitmap;
 
@@ -59,22 +65,6 @@ protected:
         if (!ms_pInstance)
             ms_pInstance = new BkBmpPool;
         return ms_pInstance;
-    }
-
-    void _Clear()
-    {
-        HBITMAP hbmp = NULL;
-
-        POSITION pos = m_mapBitmap.GetStartPosition();
-
-        while (pos != NULL) 
-        {
-            hbmp = m_mapBitmap.GetNextValue(pos);
-            if (hbmp)
-                ::DeleteObject(hbmp);
-        }
-
-        m_mapBitmap.RemoveAll();
     }
 };
 

@@ -30,15 +30,13 @@
         return TRUE;                                                        \
     }                                                                       \
 
-
-// void OnBkItemCommand(ULONG nID)
-#define BK_NOTIFY_ID_COMMAND_RANGE(itemidStart,itemidend,func)              \
-	if (BKNM_COMMAND == uCode && (itemidStart <= ((LPBKNMCOMMAND)pnmh)->uItemID) && (itemidend >= ((LPBKNMCOMMAND)pnmh)->uItemID) )  \
-	{                                                                       \
-	func(((LPBKNMCOMMAND)pnmh)->uItemID);									\
-	return TRUE;															\
-	}																		\
-
+#define BK_NOTIFY_ID_COMMAND_EX(itemidbegin, itemidend, func)					\
+	if (BKNM_COMMAND == uCode && itemidbegin <= ((LPBKNMCOMMAND)pnmh)->uItemID	\
+		&& itemidend >= ((LPBKNMCOMMAND)pnmh)->uItemID )						\
+	{																			\
+		func(((LPBKNMCOMMAND)pnmh)->uItemID);                                   \
+		return TRUE;															\
+	}																			\
 // void OnBkCommand(UINT uItemID, LPCSTR szItemClass)
 #define BK_NOTIFY_COMMAND(func)                                                     \
     if (BKNM_COMMAND == uCode)                                                      \
@@ -83,22 +81,6 @@ typedef struct _BKNMREALWNDRESIZED
         return TRUE;                                                        \
     }                                                                       \
 
-#define BK_NOTIFY_MOUSEHOVER_EX(itemid, func)                                          \
-	if (BKNM_MOUSEHOVER == uCode && itemid == ((LPBKNMCOMMAND)pnmh)->uItemID)       \
-{                                                                       \
-	func();                                                             \
-	return TRUE;                                                        \
-}                                                                       \
-
-// void OnBkMouseHover(ULONG nID)
-#define BK_NOTIFY_MOUSEHOVER_RANGE(itemidStart,itemidend,func)              \
-	if (BKNM_MOUSEHOVER == uCode && (itemidStart <= ((LPBKNMCOMMAND)pnmh)->uItemID) && (itemidend >= ((LPBKNMCOMMAND)pnmh)->uItemID) )  \
-{                                                                       \
-	func(((LPBKNMCOMMAND)pnmh)->uItemID);									\
-	return TRUE;															\
-}
-
-
 // Mouse Leave Notify
 // void OnBkMouseLeave()
 #define BKNM_MOUSELEAVE 4
@@ -109,22 +91,6 @@ typedef struct _BKNMREALWNDRESIZED
         func();                                                             \
         return TRUE;                                                        \
     }                                                                       \
-
-#define BK_NOTIFY_MOUSELEAVE_EX(itemid, func)                                          \
-	if (BKNM_MOUSELEAVE == uCode && itemid == ((LPBKNMCOMMAND)pnmh)->uItemID)       \
-{                                                                       \
-	func();                                                             \
-	return TRUE;                                                        \
-}     
-
-// void OnBkMouseLeave(ULONG nID)
-#define BK_NOTIFY_MOUSELEAVE_RANGE(itemidStart,itemidend,func)              \
-    if (BKNM_MOUSELEAVE == uCode && (itemidStart <= ((LPBKNMCOMMAND)pnmh)->uItemID) && (itemidend >= ((LPBKNMCOMMAND)pnmh)->uItemID) )  \
-{                                                                       \
-    func(((LPBKNMCOMMAND)pnmh)->uItemID);									\
-    return TRUE;															\
-}		
-
 
 // Tab Sel Change Notify
 #define BKNM_TAB_SELCHANGE  5
@@ -150,75 +116,3 @@ typedef struct _BKNMTABSELCHANGE
         return TRUE;                                                                \
     }                                                                               \
 
-#define BKNM_NOTIFY 6
-
-typedef struct _BKNMNOTIFY
-	: BKNMCOMMAND
-{
-	UINT		uNotifyMsg;
-
-} BKNMNOTIFY, *LPBKNMNOTIFY;
-
-// void OnBkNotifyMsg(UINT uItemID, UINT uNotifyMsg)
-#define BK_NOTIFY_MSG(func)															\
-	if (BKNM_NOTIFY == uCode)														\
-{																					\
-	func(((LPBKNMNOTIFY)pnmh)->uItemID, ((LPBKNMNOTIFY)pnmh)->uNotifyMsg);			\
-	return TRUE;																	\
-}																					\
-
-// Mouse LButtonDown Notify
-// void OnBkMouseLButtonDown()
-#define BKNM_MOUSELBUTTONDOWN 7
-
-#define BK_NOTIFY_MOUSELBUTTONDWON(itemid, func)                                          \
-	if (BKNM_MOUSELBUTTONDOWN == uCode && itemid == ((LPBKNMCOMMAND)pnmh)->uItemID)       \
-{                                                                       \
-	func();                                                             \
-	return TRUE;                                                        \
-}                                                                       \
-
-// void OnBkMouseLButtonDown(ULONG nID)
-#define BK_NOTIFY_MOUSELBUTTONDWON_RANGE(itemidStart, itemidend, func)              \
-	if (BKNM_MOUSELBUTTONDOWN == uCode && (itemidStart <= ((LPBKNMCOMMAND)pnmh)->uItemID) && (itemidend >= ((LPBKNMCOMMAND)pnmh)->uItemID) )  \
-{                                                                       \
-	func(((LPBKNMCOMMAND)pnmh)->uItemID);									\
-	return TRUE;															\
-}
-
-// Mouse LButtonDown Notify
-// void OnBkMouseLButtonDblClk()
-#define BKNM_MOUSELBUTTONDBLCLK 8
-
-#define BK_NOTIFY_MOUSELBUTTONDBLCLK(itemid, func)                                          \
-	if (BKNM_MOUSELBUTTONDBLCLK == uCode && itemid == ((LPBKNMCOMMAND)pnmh)->uItemID)       \
-{                                                                       \
-	func();                                                             \
-	return TRUE;                                                        \
-}                                                                       \
-
-// void OnBkMouseLButtonDblClk(ULONG nID)
-#define BK_NOTIFY_MOUSELBUTTONDBLCLK_RANGE(itemidStart, itemidend, func)              \
-	if (BKNM_MOUSELBUTTONDBLCLK == uCode && (itemidStart <= ((LPBKNMCOMMAND)pnmh)->uItemID) && (itemidend >= ((LPBKNMCOMMAND)pnmh)->uItemID) )  \
-{                                                                       \
-	func(((LPBKNMCOMMAND)pnmh)->uItemID);									\
-	return TRUE;															\
-}
-
-
-#define BKNM_MOUSERBUTTONDOWN 9
-
-#define BK_NOTIFY_MOUSERBUTTONDWON(itemid, func)                                          \
-	if (BKNM_MOUSERBUTTONDOWN == uCode && itemid == ((LPBKNMCOMMAND)pnmh)->uItemID)       \
-{                                                                       \
-	func();                                                             \
-	return TRUE;                                                        \
-}                                                                       \
-
-// void OnBkMouseRButtonDown(ULONG nID)
-#define BK_NOTIFY_MOUSERBUTTONDWON_RANGE(itemidStart, itemidend, func)              \
-	if (BKNM_MOUSERBUTTONDOWN == uCode && (itemidStart <= ((LPBKNMCOMMAND)pnmh)->uItemID) && (itemidend >= ((LPBKNMCOMMAND)pnmh)->uItemID) )  \
-{                                                                       \
-	func(((LPBKNMCOMMAND)pnmh)->uItemID);									\
-	return TRUE;															\
-}

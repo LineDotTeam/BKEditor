@@ -24,7 +24,18 @@ public:
     }
     virtual ~BkPngPool()
     {
-        _Clear();
+        Gdiplus::Image *pImg = NULL;
+
+        POSITION pos = m_mapPng.GetStartPosition();
+
+        while (pos != NULL) 
+        {
+            pImg = m_mapPng.GetNextValue(pos);
+            if (pImg)
+                delete pImg;
+        }
+
+        m_mapPng.RemoveAll();
 
         Gdiplus::GdiplusShutdown(m_gdiplusToken);
     }
@@ -46,11 +57,6 @@ public:
             pImg = pPairRet->m_value;
 
         return pImg;
-    }
-
-    static void Reload()
-    {
-        _Instance()->_Clear();
     }
 
     static size_t GetCount()
@@ -93,25 +99,7 @@ protected:
         ::GlobalUnlock(hMem);
         pStm->Release();
 
-        ::GlobalFree(hMem);
-
         return TRUE;
-    }
-
-    void _Clear()
-    {
-        Gdiplus::Image *pImg = NULL;
-
-        POSITION pos = m_mapPng.GetStartPosition();
-
-        while (pos != NULL) 
-        {
-            pImg = m_mapPng.GetNextValue(pos);
-            if (pImg)
-                delete pImg;
-        }
-
-        m_mapPng.RemoveAll();
     }
 };
 

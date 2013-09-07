@@ -34,7 +34,7 @@ public:
         WINDOWPOS WndPos = {0};
         CRect rcDlg = m_rcWindow;
 
-        rcDlg.DeflateRect(GetStyle().m_nMarginX, GetStyle().m_nMarginY);
+        rcDlg.DeflateRect(m_style.m_nMarginX, m_style.m_nMarginY);
 
         pBkWndChild->GetDlgPosition(&dlgPos);
 
@@ -76,21 +76,4 @@ protected:
     BKWIN_BEGIN_MSG_MAP()
         MSG_WM_WINDOWPOSCHANGED(OnWindowPosChanged)
     BKWIN_END_MSG_MAP()
-};
-
-class CBkDialogButton
-    : public CBkDialog
-{
-    BKOBJ_DECLARE_CLASS_NAME(CBkDialogButton, "dlgbtn")
-
-public:
-
-    virtual BOOL Load(TiXmlElement* pTiXmlElem)
-    {
-        BOOL bRet = __super::Load(pTiXmlElem);
-
-        m_bOnlyDrawChild = TRUE;
-
-        return bRet;
-    }
 };

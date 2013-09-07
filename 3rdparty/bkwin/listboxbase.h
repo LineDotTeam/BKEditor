@@ -3,9 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // CBkListBoxBaseT - 一个简单的基于ownerdraw的可变高度的单选的listbox
 
-#define	LB_REFRESH			(LB_MSGMAX-1)
-#define	LB_SETREDRAW		(LB_MSGMAX+2)
-#define LB_ENSUREVISIBLE	(LB_MSGMAX+3)
+#define	LB_REFRESH	(LB_MSGMAX-1)
 
 typedef CWinTraits<WS_CLIPCHILDREN | WS_CHILD |WS_VSCROLL | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS, 0> CBkListBoxBaseTraits;
 
@@ -51,11 +49,6 @@ public:
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		return (int)::SendMessage(m_hWnd, LB_GETCOUNT, 0, 0L);
-	}
-
-	VOID SetBkColor(COLORREF clr)
-	{
-		m_clrBG = clr;
 	}
 
 	int SetCount(int cItems)
@@ -165,7 +158,7 @@ public:
 	int InsertString(int nIndex, LPCTSTR lpszItem)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
-		return (int)::SendMessage(m_hWnd, LB_INSERTSTRING, nIndex, (LPARAM)lpszItem );
+
 		return 0;
 	}
 
@@ -178,22 +171,7 @@ public:
 	VOID Referesh( BOOL bRecalLayout = FALSE)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
-
 		::SendMessage(m_hWnd, LB_REFRESH, (WPARAM)bRecalLayout, (LPARAM)TRUE);
-		::SetWindowPos( m_hWnd, NULL, 0,0,0,0,SWP_FRAMECHANGED|SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
-	}
-
-	// 此方法会 封闭/打开 计算高度和重绘的方法
-	BOOL SetRedraw2(BOOL bRedraw)
-	{
-		ATLASSERT(::IsWindow(m_hWnd));
-		return (BOOL)::SendMessage(m_hWnd, LB_SETREDRAW, (BOOL)bRedraw, NULL);
-	}
-
-	BOOL EnsureVisible(int nItem, BOOL bPartialOK)
-	{
-		ATLASSERT(::IsWindow(m_hWnd));
-		return (BOOL)::SendMessage(m_hWnd, LB_ENSUREVISIBLE, nItem, MAKELPARAM(bPartialOK, 0));
 	}
 
 public:
@@ -220,8 +198,6 @@ public:
 		MESSAGE_HANDLER_EX(LB_SETITEMDATA,_OnSetItemData)
 		MESSAGE_HANDLER_EX(LB_GETITEMDATA,_OnGetItemData)
 		MESSAGE_HANDLER_EX(LB_REFRESH,_OnRefresh)
-		MESSAGE_HANDLER_EX(LB_SETREDRAW,_OnSetRedraw)
-		MESSAGE_HANDLER_EX(LB_ENSUREVISIBLE,_OnEnsureVisible)
 		MSG_WM_VSCROLL(_OnVScroll)
 	END_MSG_MAP()
 	
@@ -317,39 +293,6 @@ protected:
 		} 
 
 	}
-	LRESULT _OnEnsureVisible(UINT uMsg, WPARAM wParam, LPARAM lParam)
-	{
-		int		nIndex		= (int)wParam;
-		BOOL	bRefresh	= FALSE;
-		if ( TBase::GetStyle() & WS_VSCROLL )
-		{
-			if (nIndex< (int)m_listData.GetCount())
-			{
-				List_Intern_Data&	data		= m_listData[nIndex];
-				LONG				nYOffset	= -m_nScrollOffset;
-				CRect				rc;
-
-				TBase::GetWindowRect(&rc);
-				if ( data.rcItem.top < 0 )
-				{
-					m_nScrollOffset = -(data.rcItem.top-m_nScrollOffset);
-					bRefresh		= TRUE;
-				}
-				else if ( data.rcItem.bottom > rc.Height() )
-				{
-					m_nScrollOffset = rc.Height()-(data.rcItem.bottom-m_nScrollOffset);
-					bRefresh		= TRUE;
-				}
-
-				if (bRefresh)
-				{
-					_RefreshIntern();
-				}
-			}
-		}
-
-		return S_OK;
-	}
 
 
 	LRESULT _OnRefresh(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -426,32 +369,10 @@ protected:
 
 		return S_OK;
 	}
-
 	LRESULT _OnInsertString(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
-		UINT		nIndex		= (UINT)wParam;
-		LPCTSTR		lpstrText	= (LPCTSTR)lParam;
-
-		if (nIndex <= m_listData.GetCount())
-		{
-			List_Intern_Data	datax;
-
-			datax.lpParam	= NULL;
-			datax.nHeight	= 0;
-			datax.rcItem	= CRect(0,0,0,0);
-			datax.strText	= lpstrText;
-
-			m_listData.InsertAt(nIndex,datax,1);
-
-			if (nIndex==m_nCurSel)
-				m_nCurSel++;
-
-			_RefreshIntern();
-
-			return nIndex;
-		}
-		else
-			return (LRESULT)-1;
+		ATLASSERT(NULL);
+		return S_OK;
 	}
 
 	LRESULT _OnAddString(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -507,13 +428,6 @@ protected:
 		return S_OK;
 	}
 
-	LRESULT _OnSetRedraw(UINT uMsg, WPARAM wParam, LPARAM lParam)
-	{
-		BOOL	bOld = m_bCanRedraw;
-		m_bCanRedraw = (BOOL)wParam;
-		return (LRESULT)bOld;
-	}
-
 	LRESULT _OnGetItemHeight(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		int nIndex = (int)wParam;
@@ -529,12 +443,6 @@ protected:
 		int nIndex	= (int)wParam;
 
 		int nHeight	= (int)lParam;
-		if (nIndex < 0 ||
-			nHeight < 0)
-			return 0;
-
-		if (nIndex >= (int)m_listData.GetCount())
-			return 0;
 
 		m_listData[nIndex].nHeight	= nHeight;
 		
@@ -720,13 +628,6 @@ private:
 
 	VOID _RefreshIntern(BOOL bReCalc = TRUE, BOOL bReDraw = TRUE, BOOL bResetScroll = FALSE)
 	{
-		if (!m_bCanRedraw)
-		{
-			m_bNeedRecalLayout	= bReCalc;
-			m_bNeedRedraw		= bReDraw;
-			return;
-		}
-
 		if (bResetScroll)
 			_ResetScroll();
 
@@ -834,7 +735,7 @@ private:
 		}
 		else
 		{
-			m_dcMem.FillSolidRect(0,0,rc.Width(),rc.Height(),m_clrBG);
+			m_dcMem.FillSolidRect(0,0,rc.Width(),rc.Height(),RGB(253,254,255));
 			for ( int i=0; i<(int)m_listData.GetCount(); i++)
 			{
 				List_Intern_Data&	data		= m_listData[i];
@@ -924,8 +825,6 @@ private:
 		m_nColumnWidth		= -1;
 		m_nCurSel			= DEFAULT_SEL_VALUE;
 		m_nScrollOffset		= 0;
-		m_bCanRedraw		= TRUE;
-		m_clrBG				= RGB(0xFB,0xFC,0xFD);
 	}
 
 private:
@@ -954,7 +853,5 @@ private:
 	BOOL							m_bNeedRecalLayout;
 	int								m_nCurSel;
 	int								m_nColumnWidth;
-	BOOL							m_bCanRedraw;
-	COLORREF						m_clrBG;
 };
 

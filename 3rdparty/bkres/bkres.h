@@ -28,24 +28,12 @@
 #   define DEFINE_PNG(id, id_number, file_name)     \
     DEFINE_BKRES(id, PNG, id_number, file_name)
 
-#   define DEFINE_JPG(id, id_number, file_name)     \
-	DEFINE_BKRES(id, JPG, id_number, file_name)
-
-#   define DEFINE_SKIN(file_name)                   \
-    DEFINE_XML(XML_60000, 60000, file_name)
-
-#   define DEFINE_STYLE(file_name)                  \
-    DEFINE_XML(XML_60001, 60001, file_name)
-
-#   define DEFINE_STRING(file_name)                 \
-    DEFINE_XML(XML_60002, 60002, file_name)
-
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef __BKRES_RC
 
-#   include "bkwinres.rc2"
+#include "bkwinres.rc2"
 
-#   include "bkwinres.h"
+#include "bkwinres.h"
 
 #endif

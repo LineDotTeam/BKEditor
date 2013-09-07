@@ -206,7 +206,6 @@ public:
 //             }
 //         }
 //     }
-	static bool IsSelectedRadio(LPCSTR lpszGroupName, CBkWindow **ppbkWndLastSelect);
 
 protected:
 
@@ -273,14 +272,11 @@ public:
         , m_uVAlign(0)
         , m_uHAlign(0)
         , m_bTransparent(FALSE)
-		, m_nNotifyMsg(0)
-        , m_crBg(CLR_INVALID)
-        , m_crText(CLR_INVALID)
-        , m_ftText(NULL)
-        , m_nTextAlign(0)
 		, m_pPaintHook(NULL)
+#ifdef _DEBUG
+		, m_nMainThreadId( ::GetCurrentThreadId() )
+#endif
     {
-		m_rcWindow.SetRectEmpty();
     }
     virtual ~CBkWindow()
     {
@@ -345,6 +341,7 @@ protected:
     UINT m_uCmdID;
     CRect m_rcWindow;
     UINT m_uPositionType;
+    BkStyle m_style;
     CString m_strInnerText;
     LONG m_lSpecifyWidth;
     LONG m_lSpecifyHeight;
@@ -354,15 +351,13 @@ protected:
     CString m_strLinkUrl;
     BOOL m_bTransparent;
     CString m_strToolTipText;
-    CStringA m_strStyleName;
-    COLORREF m_crBg;
-    COLORREF m_crText;
-    HFONT    m_ftText;
-    int m_nTextAlign;
 
     BKDLG_POSITION m_dlgpos;
 	IBkWindowPaintHook* m_pPaintHook;
 
+#ifdef _DEBUG
+	DWORD m_nMainThreadId;
+#endif
 public:
 
     //////////////////////////////////////////////////////////////////////////
@@ -398,17 +393,6 @@ public:
         }
     }
 
-    void SetRect(LPRECT prect)
-    {
-        if (prect)
-        {
-            m_rcWindow.left =  prect->left;
-            m_rcWindow.right = prect->right;
-            m_rcWindow.top = prect->top;
-            m_rcWindow.bottom = prect->bottom;
-        }
-    }
-
     void GetDlgPosition(BKDLG_POSITION *pPos)
     {
         if (pPos)
@@ -432,7 +416,7 @@ public:
     {
         m_strInnerText = lpszText;
 
-        if ((m_uPositionType & SizeX_FitContent | SizeY_FitContent) || (CLR_INVALID == m_crBg && CLR_INVALID == GetStyle().m_crBg))
+        if ((m_uPositionType & SizeX_FitContent | SizeY_FitContent) || CLR_INVALID == m_style.m_crBg)
         {
             if ((m_uPositionType & (SizeX_FitContent | SizeY_FitContent)) && (4 != m_dlgpos.nCount))
             {
@@ -452,10 +436,20 @@ public:
             return S_FALSE;
     }
 
+	VOID TestMainThread()
+	{
+		// 当你看到这个东西的时候，我不幸的告诉你，你的其他线程在刷界面
+		// 这是一件很危险的事情
+		// 为了卫士的稳定，请您检测更改您的代码
+		ATLASSERT(m_nMainThreadId==::GetCurrentThreadId());
+	}
+
     // Send a message to BkWindow
     LRESULT BkSendMessage(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0)
     {
         LRESULT lResult = 0;
+
+		TestMainThread();
 
         SetMsgHandled(FALSE);
         ProcessWindowMessage(NULL, Msg, wParam, lParam, lResult);
@@ -468,6 +462,8 @@ public:
     // NOTICE: Dangerous
     void Move(LPRECT prect)
     {
+		TestMainThread();
+
         if (prect)
             m_rcWindow = prect;
     }
@@ -475,7 +471,7 @@ public:
     // Set current cursor, when hover
     virtual void SetCursor()
     {
-        HCURSOR hCur = ::LoadCursor(NULL, GetStyle().m_lpCursorName);
+        HCURSOR hCur = ::LoadCursor(NULL, m_style.m_lpCursorName);
         ::SetCursor(hCur);
     }
 
@@ -489,6 +485,8 @@ public:
     DWORD ModifyState(DWORD dwStateAdd, DWORD dwStateRemove)
     {
         DWORD dwOldState = m_dwState;
+
+		TestMainThread();
 
         m_dwState |= dwStateAdd;
         m_dwState &= ~dwStateRemove;
@@ -530,7 +528,7 @@ public:
         {
             CBkWindow *pWndParent = this;
 
-            while (NULL != (pWndParent = BkWnds::GetWindow(pWndParent->GetParent())))
+            while (pWndParent = BkWnds::GetWindow(pWndParent->GetParent()))
             {
                 if (pWndParent->IsDisabled())
                     return TRUE;
@@ -548,7 +546,7 @@ public:
         {
             CBkWindow *pWndParent = this;
 
-            while (NULL != (pWndParent = BkWnds::GetWindow(pWndParent->GetParent())))
+            while (pWndParent = BkWnds::GetWindow(pWndParent->GetParent()))
             {
                 if (!pWndParent->IsVisible())
                     return FALSE;
@@ -560,6 +558,8 @@ public:
 
     void SetVisible(BOOL bVisible)
     {
+		TestMainThread();
+
         if (bVisible)
             ModifyState(0, BkWndState_Invisible);
         else
@@ -568,7 +568,7 @@ public:
 
     BOOL NeedRedrawParent()
     {
-        return (GetStyle().m_strSkinName.IsEmpty() && (m_crBg == CLR_INVALID) && (GetStyle().m_crBg == CLR_INVALID));
+        return (m_style.m_strSkinName.IsEmpty() && (m_style.m_crBg == CLR_INVALID));
     }
 
 //     void Invalidate()
@@ -597,23 +597,17 @@ public:
         return m_bTransparent;
     }
 
-    //BkStyle m_style;
-
-    const BkStyle& GetStyle()
-    {
-        return BkStyle::GetStyle(m_strStyleName);
-    }
-
-	HFONT GetFont()
+	// add by dummyz@126.com
+	BkStyle& GetStyle()
 	{
-		return m_ftText;
+		return m_style;
 	}
 
 	void SetPaintHook(IBkWindowPaintHook* pPaintHook)
 	{
 		m_pPaintHook = pPaintHook;
 	}
-	
+
 public:
 
     //////////////////////////////////////////////////////////////////////////
@@ -746,14 +740,14 @@ public:
 
     virtual BOOL NeedRedrawWhenStateChange()
     {
-        if (!GetStyle().m_strSkinName.IsEmpty())
+        if (!m_style.m_strSkinName.IsEmpty())
         {
-            CBkSkinBase* pSkin = BkSkin::GetSkin(GetStyle().m_strSkinName);
+            CBkSkinBase* pSkin = BkSkin::GetSkin(m_style.m_strSkinName);
             if (pSkin && !pSkin->IgnoreState())
                 return TRUE;
         }
 
-        return (CLR_INVALID != GetStyle().m_crHoverText) || (NULL != GetStyle().m_ftHover) || (CLR_INVALID != GetStyle().m_crBgHover);
+        return (CLR_INVALID != m_style.m_crHoverText) || (NULL != m_style.m_ftHover) || (CLR_INVALID != m_style.m_crBgHover);
     }
 
 //     virtual BOOL NeedRedraw()
@@ -857,14 +851,13 @@ public:
     // Draw background default
     void DrawBkgnd(CDCHandle& dc)
     {
-        const BkStyle& theStyle = GetStyle();
-        if (theStyle.m_strSkinName.IsEmpty())
+        if (m_style.m_strSkinName.IsEmpty())
         {
-            COLORREF crBg = (CLR_INVALID != m_crBg) ? m_crBg : theStyle.m_crBg;
+            COLORREF crBg = m_style.m_crBg;
 
-            if (BkWndState_Hover == (GetState() & BkWndState_Hover) && CLR_INVALID != theStyle.m_crBgHover)
+            if (BkWndState_Hover == (GetState() & BkWndState_Hover) && CLR_INVALID != m_style.m_crBgHover)
             {
-                crBg = theStyle.m_crBgHover;
+                crBg = m_style.m_crBgHover;
             }
 
             if (CLR_INVALID != crBg)
@@ -872,7 +865,7 @@ public:
         }
         else
         {
-            CBkSkinBase* pSkin = BkSkin::GetSkin(theStyle.m_strSkinName);
+            CBkSkinBase* pSkin = BkSkin::GetSkin(m_style.m_strSkinName);
             if (pSkin)
             {
                 pSkin->Draw(dc, m_rcWindow, m_dwState);
@@ -909,52 +902,39 @@ public:
         HFONT /*hftOld = NULL, */hftDraw = NULL;
         COLORREF /*crOld = CLR_INVALID, crOldBg = CLR_INVALID, */crDraw = CLR_INVALID;
         /*int nOldBkMode = OPAQUE;*/
-        const BkStyle& theStyle = GetStyle();
 
         BkDC.rcClient = m_rcWindow;
-        BkDC.rcClient.DeflateRect(theStyle.m_nMarginX, theStyle.m_nMarginY);
+        BkDC.rcClient.DeflateRect(m_style.m_nMarginX, m_style.m_nMarginY);
 
-
-        if (!theStyle.m_strSkinName.IsEmpty())
+        if (!m_style.m_strSkinName.IsEmpty())
         {
             BkDC.bBkModeChanged = TRUE;
             BkDC.nOldBkMode = dc.SetBkMode(TRANSPARENT);
         }
-        if (CLR_INVALID != m_crBg)
+        if (CLR_INVALID != m_style.m_crBg)
         {
             BkDC.bBgColorChanged = TRUE;
-            BkDC.crOldBg = dc.SetBkColor(m_crBg);
-        }
-        else if (CLR_INVALID != theStyle.m_crBg)
-        {
-            BkDC.bBgColorChanged = TRUE;
-            BkDC.crOldBg = dc.SetBkColor(theStyle.m_crBg);
+            BkDC.crOldBg = dc.SetBkColor(m_style.m_crBg);
         }
 
-        if (m_ftText)
-            hftDraw = m_ftText;
-        else if (theStyle.m_ftText)
-            hftDraw = theStyle.m_ftText;
-		else
-			hftDraw = BkFontPool::GetFont(BKF_DEFAULTFONT);
+        if (m_style.m_ftText)
+            hftDraw = m_style.m_ftText;
 
-        if (m_crText != CLR_INVALID)
-            crDraw = m_crText;
-        else if (theStyle.m_crText != CLR_INVALID)
-            crDraw = theStyle.m_crText;
+        if (m_style.m_crText != CLR_INVALID)
+            crDraw = m_style.m_crText;
 
         if (IsDisabled(TRUE)/*BkWndState_Disable == (GetState() & BkWndState_Disable)*/)
         {
-            if (theStyle.m_crDisabledText != CLR_INVALID)
-                crDraw = theStyle.m_crDisabledText;
+            if (m_style.m_crDisabledText != CLR_INVALID)
+                crDraw = m_style.m_crDisabledText;
         }
         else if (BkWndState_Hover == (GetState() & BkWndState_Hover))
         {
-            if (theStyle.m_ftHover)
-                hftDraw = theStyle.m_ftHover;
+            if (m_style.m_ftHover)
+                hftDraw = m_style.m_ftHover;
 
-            if (theStyle.m_crHoverText != CLR_INVALID)
-                crDraw = theStyle.m_crHoverText;
+            if (m_style.m_crHoverText != CLR_INVALID)
+                crDraw = m_style.m_crHoverText;
         }
 
         if (hftDraw)
@@ -988,111 +968,11 @@ public:
     // Draw inner text default
     void OnPaint(CDCHandle dc)
     {
-		if (m_strInnerText.IsEmpty())
-			return;
-			
-		BkDCPaint BkDC;
+        BkDCPaint BkDC;
+
         BeforePaint(dc, BkDC);
 
-
-		if (0 == m_nTextAlign) 
-			m_nTextAlign = GetStyle().m_nTextAlign;
-
-		if (BkFontPool::IsYaHei())
-		{
-			int nAddSize = BkFontPool::GetFontSizeAdding(dc.GetCurrentFont());
-
-			if ((m_nTextAlign & DT_BOTTOM) == DT_BOTTOM)
-			{
-				int nTop = BkDC.rcClient.top;
-				BkDC.rcClient.top -= 2 * (nAddSize + 1); 
-				BkDC.rcClient.bottom -= 2 * (nAddSize + 1);
-				int nMinHeight = BkFontPool::GetDefaultFontSize() + nAddSize + 2 * (nAddSize + 2);
-				if (BkDC.rcClient.Height() < nMinHeight)
-					BkDC.rcClient.bottom += nMinHeight - BkDC.rcClient.Height();
-
-
-				if (BkDC.rcClient.bottom - 3 - (BkFontPool::GetDefaultFontSize() + nAddSize) < nTop)
-					BkDC.rcClient.bottom = nTop + BkFontPool::GetDefaultFontSize() + nAddSize + 3;
-			}
-			else if ((m_nTextAlign & DT_VCENTER) == DT_VCENTER)
-			{
-				BkDC.rcClient.top -= 0; 
-				BkDC.rcClient.bottom -= 0;
-			}
-			else
-			{
-				BkDC.rcClient.top -= 3 * (nAddSize + 1); 
-				BkDC.rcClient.bottom -= 3 * (nAddSize + 1);
-			}
-		}
-
-		if (GetStyle().m_nGdiplus)
-		{
-			Gdiplus::Graphics graphics( dc );
-			CString strFaceName;
-			LONG lSize;
-			BkFontPool::GetFontInfo( strFaceName, lSize );
-
-			LOGFONT lf = {0};
-			GetObject(dc.GetCurrentFont(), sizeof (LOGFONT), &lf);
-
-			Gdiplus::Font myFont(dc, &lf);
-			Gdiplus::SolidBrush blackBrush(Gdiplus::Color(254, GetRValue(dc.GetTextColor()), GetGValue(dc.GetTextColor()), GetBValue(dc.GetTextColor())));
-
-			Gdiplus::StringFormat format;
-			if ((m_nTextAlign & DT_CENTER) == DT_CENTER)
-				format.SetAlignment(Gdiplus::StringAlignmentCenter);
-
-			if ((m_nTextAlign & DT_VCENTER) == DT_VCENTER)
-				format.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-			
-			if ((m_nTextAlign & DT_END_ELLIPSIS) == DT_END_ELLIPSIS)
-				format.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
-			if ((m_nTextAlign & DT_WORD_ELLIPSIS) == DT_WORD_ELLIPSIS)
-				format.SetTrimming(Gdiplus::StringTrimmingEllipsisWord);
-			if ((m_nTextAlign & DT_PATH_ELLIPSIS) == DT_PATH_ELLIPSIS)
-				format.SetTrimming(Gdiplus::StringTrimmingEllipsisPath);
-
-            Gdiplus::RectF layoutRect(
-                                (Gdiplus::REAL)BkDC.rcClient.left, 
-                                (Gdiplus::REAL)BkDC.rcClient.top, 
-                                (Gdiplus::REAL)BkDC.rcClient.Width(), 
-                                (Gdiplus::REAL)BkDC.rcClient.Height()
-                                );
-
-
-			graphics.DrawString(
-				m_strInnerText,
-				-1,
-				&myFont,
-				layoutRect,
-				&format,
-				&blackBrush);
-		}
-		else
-		{
-			int nRet = 0;
-			if (GetStyle().m_nShadow != 0)
-			{
-				nRet = dc.DrawShadowText(
-					m_strInnerText, 
-					m_strInnerText.GetLength(), 
-					BkDC.rcClient, 
-					m_nTextAlign, 
-					dc.GetTextColor(), 
-					GetStyle().m_crShadow, 
-					2, 
-					2);
-			}
-
-			if (0 == nRet)
-				dc.DrawText(
-				m_strInnerText, m_strInnerText.GetLength(), 
-				BkDC.rcClient, 
-				m_nTextAlign);
-		}
-
+        dc.DrawText(m_strInnerText, m_strInnerText.GetLength(), BkDC.rcClient, m_style.m_nTextAlign);
 
         AfterPaint(dc, BkDC);
     }
@@ -1142,7 +1022,6 @@ public:
             CDC dcTest;
             HFONT hftOld = NULL, hftTest = NULL;
             CRect rcTest = m_rcWindow;
-            const BkStyle& theStyle = GetStyle();
 
             dcTest.CreateCompatibleDC(dcDesktop);
 
@@ -1152,26 +1031,19 @@ public:
                 rcTest.bottom = rcTest.top + pSize->cy;
             }
 
-            if (m_ftText)
-                hftTest = m_ftText;
-            else if (theStyle.m_ftText)
-                hftTest = theStyle.m_ftText;
+            if (m_style.m_ftText)
+                hftTest = m_style.m_ftText;
             else
             {
                 CBkWindow* pWnd = this;
                 HBKWND hWndParent = NULL;
 
-                while (pWnd && NULL != (hWndParent = pWnd->GetParent()))
+                while (hWndParent = pWnd->GetParent())
                 {
                     pWnd = BkWnds::GetWindow(hWndParent);
-                    if (pWnd && pWnd->m_ftText)
+                    if (pWnd->m_style.m_ftText)
                     {
-                        hftTest = pWnd->m_ftText;
-                        break;
-                    }
-                    else if (pWnd && pWnd->GetStyle().m_ftText)
-                    {
-                        hftTest = pWnd->GetStyle().m_ftText;
+                        hftTest = pWnd->m_style.m_ftText;
                         break;
                     }
                 }
@@ -1180,19 +1052,19 @@ public:
 
             if (BkWndState_Hover == (GetState() & BkWndState_Hover))
             {
-                if (theStyle.m_ftHover)
-                    hftTest = theStyle.m_ftHover;
+                if (m_style.m_ftHover)
+                    hftTest = m_style.m_ftHover;
                 else
                 {
                     CBkWindow* pWnd = this;
                     HBKWND hWndParent = NULL;
 
-                    while (pWnd && NULL != (hWndParent = pWnd->GetParent()))
+                    while (hWndParent = pWnd->GetParent())
                     {
                         pWnd = BkWnds::GetWindow(hWndParent);
-                        if (pWnd && pWnd->GetStyle().m_ftHover)
+                        if (pWnd->m_style.m_ftHover)
                         {
-                            hftTest = pWnd->GetStyle().m_ftHover;
+                            hftTest = pWnd->m_style.m_ftHover;
                             break;
                         }
                     }
@@ -1204,17 +1076,17 @@ public:
 
             hftOld = dcTest.SelectFont(hftTest);
 
-            rcTest.DeflateRect(theStyle.m_nMarginX, theStyle.m_nMarginY);
+            rcTest.DeflateRect(m_style.m_nMarginX, m_style.m_nMarginY);
 
-            int nTestDrawMode = theStyle.m_nTextAlign & ~(DT_CENTER | DT_RIGHT | DT_VCENTER | DT_BOTTOM);
+            int nTestDrawMode = m_style.m_nTextAlign & ~(DT_CENTER | DT_RIGHT | DT_VCENTER | DT_BOTTOM);
 
             if (nTestDrawMode & DT_WORDBREAK)
                 rcTest.bottom = 0x7FFF;
 
             dcTest.DrawText(m_strInnerText, m_strInnerText.GetLength(), rcTest, nTestDrawMode | DT_CALCRECT);
 
-            pSize->cx = rcTest.Width() + 2 * theStyle.m_nMarginX;
-            pSize->cy = rcTest.Height() + 2 * theStyle.m_nMarginY;
+            pSize->cx = rcTest.Width() + 2 * m_style.m_nMarginX;
+            pSize->cy = rcTest.Height() + 2 * m_style.m_nMarginY;
 
             dcTest.SelectFont(hftOld);
 
@@ -1278,40 +1150,6 @@ public:
         return S_FALSE;
     }
 
-	void OnMouseMove(UINT nFlags, CPoint point)
-	{
-		// 传出MouseMove消息。LoveHM By ZC. 2010-11-18.
-		if (m_nNotifyMsg & 0x01)
-		{
-			BKNMNOTIFY nms;
-			nms.hdr.code = BKNM_NOTIFY;
-			nms.hdr.hwndFrom = m_hWndContainer;
-			nms.hdr.idFrom = ::GetDlgCtrlID(m_hWndContainer);;
-			nms.uItemID = GetCmdID();
-			nms.szItemClass = "wnd";
-			nms.uNotifyMsg = BKNM_MOUSEHOVER;
-
-			LRESULT lRet = ::SendMessage(m_hWndContainer, WM_NOTIFY, (LPARAM)nms.hdr.idFrom, (WPARAM)&nms);
-		}
-	}
-
-	void OnMouseLeave()
-	{
-		// 传出MouseLeave消息。LoveHM By ZC. 2010-11-18.
-		if (m_nNotifyMsg & 0x02)
-		{
-			BKNMNOTIFY nms;
-			nms.hdr.code = BKNM_NOTIFY;
-			nms.hdr.hwndFrom = m_hWndContainer;
-			nms.hdr.idFrom = ::GetDlgCtrlID(m_hWndContainer);;
-			nms.uItemID = GetCmdID();
-			nms.szItemClass = "wnd";
-			nms.uNotifyMsg = BKNM_MOUSELEAVE;
-
-			LRESULT lRet = ::SendMessage(m_hWndContainer, WM_NOTIFY, (LPARAM)nms.hdr.idFrom, (WPARAM)&nms);
-		}
-	}
-
     void _RepositionSelf();
 
 protected:
@@ -1335,8 +1173,6 @@ protected:
         MSG_WM_WINDOWPOSCHANGED(OnWindowPosChanged)
         MSG_WM_NCCALCSIZE(OnNcCalcSize)
         MSG_WM_SHOWWINDOW(OnShowWindow)
-		MSG_WM_MOUSEMOVE(OnMouseMove)
-		MSG_WM_MOUSELEAVE(OnMouseLeave)
     BKWIN_END_MSG_MAP_BASE()
 // 
 //     enum {
@@ -1344,11 +1180,11 @@ protected:
 //     };
 
     BKWIN_DECLARE_ATTRIBUTES_BEGIN()
-        BKWIN_STRING_ATTRIBUTE("class", m_strStyleName, TRUE)
+        BKWIN_STYLE_ATTRIBUTE("class", m_style, TRUE)
         BKWIN_INT_ATTRIBUTE("id", m_uCmdID, FALSE)//, 0)
-        BKWIN_COLOR_ATTRIBUTE("crbg", m_crBg, FALSE)
-        BKWIN_COLOR_ATTRIBUTE("crtext", m_crText, FALSE)
-        BKWIN_FONT_ATTRIBUTE("font", m_ftText, FALSE)
+        BKWIN_COLOR_ATTRIBUTE("crbg", m_style.m_crBg, FALSE)
+        BKWIN_COLOR_ATTRIBUTE("crtext", m_style.m_crText, FALSE)
+        BKWIN_FONT_ATTRIBUTE("font", m_style.m_ftText, FALSE)
         BKWIN_TSTRING_ATTRIBUTE("href", m_strLinkUrl, FALSE)
         BKWIN_TSTRING_ATTRIBUTE("tip", m_strToolTipText, FALSE)
         BKWIN_ENUM_ATTRIBUTE("valign", UINT, TRUE)
@@ -1363,10 +1199,7 @@ protected:
         BKWIN_ENUM_END(m_uHAlign)
         BKWIN_CUSTOM_ATTRIBUTE("pos", OnAttributePosChange)
         BKWIN_INT_ATTRIBUTE("transparent", m_bTransparent, FALSE)//, 0)
-		BKWIN_UINT_ATTRIBUTE("notify", m_nNotifyMsg, 0)
     BKWIN_DECLARE_ATTRIBUTES_END()
-protected:
-	int m_nNotifyMsg;
 };
 
 // 已废弃
@@ -1427,35 +1260,6 @@ inline void BkWnds::SelectRadio(CBkWindow* pbkWnd, LPCSTR lpszGroupName, CBkWind
     }
 
 	::LeaveCriticalSection(&ms_lockWndMap);
-}
-
-inline bool BkWnds::IsSelectedRadio(LPCSTR lpszGroupName, CBkWindow **ppbkWndLastSelect)
-{
-	::EnterCriticalSection(&ms_lockWndMap);
-
-	CAtlList<CBkWindow *> &ListGroup = _Instance()->m_mapRadioPool[lpszGroupName];
-
-
-	POSITION posCurrent = NULL, pos = ListGroup.GetHeadPosition();
-	bool bSelect = false;
-	while (pos)
-	{
-		posCurrent = pos;
-		CBkWindow *pbkWndFind = ListGroup.GetNext(pos);
-
-
-		if (pbkWndFind->IsChecked())
-		{
-			bSelect = true;
-			if (ppbkWndLastSelect)
-				*ppbkWndLastSelect = pbkWndFind;
-			break;
-		}
-	}
-
-	::LeaveCriticalSection(&ms_lockWndMap);
-
-	return bSelect;
 }
 
 class CBkContainerWnd : public CBkWindow
