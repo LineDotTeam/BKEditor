@@ -21,10 +21,12 @@ UIXmlProduce::~UIXmlProduce()
 Global::BOOL UIXmlProduce::Produce(const ControlPool& controlpool,
     const std::wstring& strPath)
 {
-    if (strPath.empty())
+    if (strPath.empty()
+        || controlpool.Empty())
     {
         return FALSE;
     }
 
+    
     return TRUE;
 }

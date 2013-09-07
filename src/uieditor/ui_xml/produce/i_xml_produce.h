@@ -11,9 +11,8 @@
 #include "3rdparty/tinyxml/tinyxml.h"
 #include "include/utils.h"
 #include "include/global_def.h"
+#include "control/control_pool/control_pool.h"
 #include <string>
-
-class ControlPool;
 
 interface IXmlProduce
 {
