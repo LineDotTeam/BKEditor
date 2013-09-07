@@ -9,9 +9,7 @@
 #ifndef __DEFINE_ICOMPONENT_H_
 #define __DEFINE_ICOMPONENT_H_
 
-#include "stdafx.h"
 #include <ktipedit/ktip_edit3.h>
-#include <bkres/bkres.h>
 #include <string>
 #include <map>
 #include "bkwinres.h"

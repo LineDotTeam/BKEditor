@@ -1,4 +1,5 @@
-#include "mywindow.h"
+#include "stdafx.h"
+#include "uieditor_dlg.h"
 
 KMyWindow::KMyWindow(HINSTANCE hInstance)
 : CBkDialogImpl<KMyWindow>(XML_BK_MAIN_DEF)
@@ -293,18 +294,6 @@ void KMyWindow::_InitEdit()
 
 void KMyWindow::_InitList()
 {
-    CRect rect;
-    rect.left = 1000;
-    rect.right = 1200;
-    rect.top = 10;
-    rect.bottom = 50;
-
-    CString strTmp(L"test");
-    m_kListBox.Create(m_hWnd, rect);
-    m_kListBox.AddString(strTmp.GetString());
-    m_kListBox.AddString(strTmp.GetString());
-    m_kListBox.AddString(strTmp.GetString());
-    int nNum = m_kListBox.GetCount();
 }
 
 LRESULT KMyWindow::_OnChangeSize(UINT nFlag, WPARAM wParam, LPARAM lParam, BOOL bHandled)

@@ -17,8 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="../../tmp/debug"
-			IntermediateDirectory="../../tmp/debug"
+			OutputDirectory="../../product/win32_d"
+			IntermediateDirectory="../../product/win32_d"
 			ConfigurationType="1"
 			CharacterSet="1"
 			>
@@ -40,12 +40,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../publish"
+				AdditionalIncludeDirectories="../../3rdparty/wtl;&quot;$(projectdir)&quot;;../../3rdparty;../../"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -55,7 +55,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="../../publish/bkres"
+				AdditionalIncludeDirectories="../../3rdparty/bkres"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -174,7 +174,7 @@
 	</References>
 	<Files>
 		<Filter
-			Name="import"
+			Name="3rdparty"
 			>
 			<Filter
 				Name="bkres"
@@ -285,39 +285,63 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="miniutil"
-				>
-				<File
-					RelativePath="..\..\publish\miniutil\bkconsole.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="tinyxml"
 				>
 				<File
-					RelativePath="..\..\publish\tinyxml\tinystr.cpp"
+					RelativePath="..\..\3rdparty\tinyxml\tinystr.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\..\3rdparty\tinyxml\tinystr.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\publish\tinyxml\tinystr.h"
+					RelativePath="..\..\3rdparty\tinyxml\tinyxml.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\..\3rdparty\tinyxml\tinyxml.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\publish\tinyxml\tinyxml.cpp"
+					RelativePath="..\..\3rdparty\tinyxml\tinyxmlerror.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\..\publish\tinyxml\tinyxml.h"
+					RelativePath="..\..\3rdparty\tinyxml\tinyxmlparser.cpp"
 					>
-				</File>
-				<File
-					RelativePath="..\..\publish\tinyxml\tinyxmlerror.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\publish\tinyxml\tinyxmlparser.cpp"
-					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 			<Filter
@@ -418,80 +442,44 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="main"
+			Name="include"
 			>
 			<File
-				RelativePath=".\mybkwin.cpp"
+				RelativePath="..\..\include\global_def.h"
 				>
 			</File>
 			<File
-				RelativePath=".\mywindow.cpp"
+				RelativePath="..\..\include\singleton.h"
 				>
 			</File>
 			<File
-				RelativePath=".\mywindow.h"
+				RelativePath="..\..\include\utils.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\include\utils.h"
 				>
 			</File>
-			<Filter
-				Name="component"
-				>
-				<File
-					RelativePath=".\icomponent.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\icomponent.h"
-					>
-				</File>
-				<File
-					RelativePath=".\kcomp_button.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\kcomp_button.h"
-					>
-				</File>
-				<File
-					RelativePath=".\kcomp_img.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\kcomp_img.h"
-					>
-				</File>
-				<File
-					RelativePath=".\kcomp_imgbtn.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\kcomp_imgbtn.h"
-					>
-				</File>
-				<File
-					RelativePath=".\kcomp_text.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\kcomp_text.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="listbox"
-				>
-				<File
-					RelativePath=".\mylistbox.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\mylistbox.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="resouce"
 			>
+			<File
+				RelativePath=".\bkwinres.h"
+				>
+			</File>
+			<File
+				RelativePath=".\resource.h"
+				>
+			</File>
 			<Filter
 				Name="rc"
 				>
@@ -500,7 +488,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mybkwin.rc"
+					RelativePath=".\uieditor_dlg.rc"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -562,20 +550,132 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="headfile"
+			Name="publish"
+			>
+		</Filter>
+		<Filter
+			Name="source"
 			>
 			<File
-				RelativePath=".\bkwinres.h"
+				RelativePath=".\stdafx.cpp"
 				>
-			</File>
-			<File
-				RelativePath=".\resource.h"
-				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
+			<Filter
+				Name="uieditor_dlg"
+				>
+				<File
+					RelativePath=".\main.cpp"
+					>
+				</File>
+				<Filter
+					Name="component"
+					>
+					<File
+						RelativePath=".\component\icomponent.cpp"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="2"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\component\icomponent.h"
+						>
+					</File>
+					<File
+						RelativePath=".\component\kcomp_button.cpp"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="2"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\component\kcomp_button.h"
+						>
+					</File>
+					<File
+						RelativePath=".\component\kcomp_img.cpp"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="2"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\component\kcomp_img.h"
+						>
+					</File>
+					<File
+						RelativePath=".\component\kcomp_imgbtn.cpp"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="2"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\component\kcomp_imgbtn.h"
+						>
+					</File>
+					<File
+						RelativePath=".\component\kcomp_text.cpp"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="2"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\component\kcomp_text.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="dialog"
+					>
+					<File
+						RelativePath=".\dialog\uieditor_dlg.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\dialog\uieditor_dlg.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

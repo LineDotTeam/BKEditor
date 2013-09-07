@@ -9,16 +9,14 @@
 #ifndef __DEFINE_MYWINDOW_H_
 #define __DEFINE_MYWINDOW_H_
 
-#include "stdafx.h"
 #include <ktipedit/ktip_edit3.h>
 #include <vector>
-#include "bkwinres.h"
 
-#include "kcomp_img.h"
-#include "kcomp_text.h"
-#include "kcomp_button.h"
-#include "kcomp_imgbtn.h"
-#include "mylistbox.h"
+#include "bkwinres.h"
+#include "component/kcomp_img.h"
+#include "component/kcomp_text.h"
+#include "component/kcomp_button.h"
+#include "component/kcomp_imgbtn.h"
 
 #define LEFT_OFFSET 200
 #define TOP_OFFSET  30
@@ -121,7 +119,6 @@ private:
     HICON       m_hIcon;
 
     KTipEdit3   m_kEdit[ATTRUTE_SIZE];
-    KListBox    m_kListBox;
 };
 
 

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include <windows.h>
-#include "mywindow.h"
-#include "kcomp_text.h"
+#include "dialog/uieditor_dlg.h"
+#include "component/kcomp_text.h"
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int /*nCmdShow*/)
 {

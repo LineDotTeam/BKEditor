@@ -1,24 +1,25 @@
-#include "kcomp_button.h"
+#include "stdafx.h"
+#include "kcomp_img.h"
 
-int KCompButton::m_nButtonId = 72000;
+int KCompImg::m_nImgId = 76000;
 
-KCompButton::KCompButton()
+KCompImg::KCompImg()
 {
 
 }
 
-KCompButton::~KCompButton()
+KCompImg::~KCompImg()
 {
 
 }
 
-BOOL KCompButton::InitComp()
+BOOL KCompImg::InitComp()
 {
-    m_strCompType = "button";
-    m_nId         = m_nButtonId++;
+    m_strCompType = "img";
+    m_nId         = m_nImgId++;
 
     std::string strAttrTmp[MAX_PATH] = {"id", "class", "href", "height", "width", "pos", "show", "value", "tip",
-                                        "crbg", "crtext", "font", "valign", "align", "skin", "*"};
+                                        "crbg", "crtext", "font", "valign", "align", "skin", "sub", "*"};
     for (size_t i = 0; strAttrTmp[i] != "*"; ++i)
     {
         m_mapAttrute.insert(std::make_pair(strAttrTmp[i], ""));
@@ -29,13 +30,14 @@ BOOL KCompButton::InitComp()
 
     SetCompAttrute("value", m_strCompType);
     SetCompAttrute("crbg", "777777");
-    SetCompAttrute("height", "30");
+    SetCompAttrute("height", "100");
     SetCompAttrute("width",  "100");
     SetCompAttrute("id", strTmp.GetString());
     return TRUE;
 }
 
-BOOL KCompButton::UninitComp()
+BOOL KCompImg::UninitComp()
 {
     return FALSE;
 }
+

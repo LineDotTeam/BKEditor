@@ -1,24 +1,25 @@
-#include "kcomp_img.h"
+#include "stdafx.h"
+#include "kcomp_imgbtn.h"
 
-int KCompImg::m_nImgId = 76000;
+int KCompImgbtn::m_nImgbtnId = 74000;
 
-KCompImg::KCompImg()
+KCompImgbtn::KCompImgbtn()
 {
 
 }
 
-KCompImg::~KCompImg()
+KCompImgbtn::~KCompImgbtn()
 {
 
 }
 
-BOOL KCompImg::InitComp()
+BOOL KCompImgbtn::InitComp()
 {
-    m_strCompType = "img";
-    m_nId         = m_nImgId++;
+    m_strCompType = "imgbtn";
+    m_nId         = m_nImgbtnId++;
 
     std::string strAttrTmp[MAX_PATH] = {"id", "class", "href", "height", "width", "pos", "show", "value", "tip",
-                                        "crbg", "crtext", "font", "valign", "align", "skin", "sub", "*"};
+                                        "crbg", "crtext", "font", "valign", "align", "skin", "*"};
     for (size_t i = 0; strAttrTmp[i] != "*"; ++i)
     {
         m_mapAttrute.insert(std::make_pair(strAttrTmp[i], ""));
@@ -35,8 +36,7 @@ BOOL KCompImg::InitComp()
     return TRUE;
 }
 
-BOOL KCompImg::UninitComp()
+BOOL KCompImgbtn::UninitComp()
 {
     return FALSE;
 }
-

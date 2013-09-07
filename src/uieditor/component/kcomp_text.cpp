@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "kcomp_text.h"
 
 int KCompText::m_nTextId = 70000;
