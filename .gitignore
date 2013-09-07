@@ -33,3 +33,16 @@ _UpgradeReport_Files
 *.suo
 *.res
 *.ncb
+
+*.pyc 
+*.pyo
+
+*.user 
+*.orig 
+*.aps 
+debug 
+release 
+.idea 
+tool.vcproj 
+win32 
+win32d
