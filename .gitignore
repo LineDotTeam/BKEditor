@@ -37,12 +37,12 @@ _UpgradeReport_Files
 *.pyc 
 *.pyo
 
-*.user 
-*.orig 
-*.aps 
-debug 
-release 
-.idea 
-tool.vcproj 
-win32 
+*.user
+*.orig
+*.aps
+debug
+release
+.idea
+tool.vcproj
+win32
 win32d
