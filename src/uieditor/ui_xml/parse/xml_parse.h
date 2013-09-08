@@ -32,9 +32,9 @@ private:
         const std::string& strName);
 
     Global::BOOL _ParseControl(TiXmlElement& element,
-        std::string strMustAttribute[],
-        std::string strOptionalAttribute[],
-        const std::string& strName,
+        KControlNode* pNode);
+
+    Global::BOOL _ParseControlAll(TiXmlElement& element,
         KControlNode* pNode);
 };
 

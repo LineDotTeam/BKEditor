@@ -8,12 +8,24 @@
 #ifndef __UI_XML_DEF_H_
 #define __UI_XML_DEF_H_
 
+#include <string>
+#include <vector>
+
+typedef std::vector<std::string> vecControlXmlInfo;
+typedef std::vector<std::string>::iterator vecControlXmlInfoIt;
+typedef std::vector<std::string>::const_iterator vecControlXmlInfoConstIt;
+
+typedef std::vector<std::vector<std::string> > vecControlXmlListInfo;
+typedef std::vector<std::vector<std::string> >::iterator vecControlXmlListInfoIt;
+typedef std::vector<std::vector<std::string> >::const_iterator vecControlXmlInfoListConstIt;
+
 #define XML_DIALOG_ROOT                     "dialog"
 
 #define XML_DIALOG_CONTROL_EDIT             "edit"
 #define XML_DIALOG_CONTROL_BUTTON           "button"
 #define XML_DIALOG_CONTROL_TEXT             "text"
 #define XML_DIALOG_CONTROL_LIST             "list"
+#define XML_DIALOG_CONTROL_DLG              "dlg"
 
 #define ID_OBJECT_ATTRIBUTE                 "id"
 #define CID_OBJECT_ATTRIBUTE                "cid"

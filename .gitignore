@@ -20,6 +20,7 @@
 *.idb
 *.pdb
 *.log
+*.user
 
 Debug
 win32_d

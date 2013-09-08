@@ -57,50 +57,31 @@ Global::BOOL XMLParse::Parse(const std::wstring& strPath,
 
 Global::BOOL XMLParse::_Parse(TiXmlDocument& document)
 {
-    TiXmlElement* controlobject = document.RootElement();
-    std::string sRootName = controlobject->Value();
+    TiXmlElement* pControlObject = document.RootElement();
+    std::string sRootName = pControlObject->Value();
     
     if (sRootName != XML_DIALOG_ROOT)
     {
         return FALSE;
     }
 
-    TiXmlNode* controlobjectNode = document.FirstChild(XML_DIALOG_ROOT);
+    TiXmlNode* pControlObjectNode = document.FirstChild(XML_DIALOG_ROOT);
 
-    if (controlobjectNode == NULL)
+    if (pControlObjectNode == NULL)
     {
         return false;
     }
 
     KControlNode* pNode = new KControlNode;
 
-    for (controlobject = controlobjectNode->FirstChildElement();
-        controlobject != NULL;
-        controlobject = controlobject->NextSiblingElement())
+    pControlObject = pControlObjectNode->FirstChildElement();
+
+    if (!pControlObject)
     {
-        _ParseControl(*controlobject,
-            g_strMustAttribute_all,
-            g_strOptionalAttribute_all,
-            XML_DIALOG_CONTROL_EDIT,
-            pNode);
-        _ParseControl(*controlobject,
-            g_strMustAttribute_all,
-            g_strOptionalAttribute_all,
-            XML_DIALOG_CONTROL_BUTTON,
-            pNode);
-        _ParseControl(*controlobject,
-            g_strMustAttribute_all,
-            g_strOptionalAttribute_all,
-            XML_DIALOG_CONTROL_TEXT,
-            pNode);
-        _ParseControl(*controlobject,
-            g_strMustAttribute_all,
-            g_strOptionalAttribute_all,
-            XML_DIALOG_CONTROL_LIST,
-            pNode);
+        return FALSE;
     }
 
-    return TRUE;
+    return _ParseControlAll(*pControlObject, pNode);
 }
 
 Global::BOOL XMLParse::IsElementObject(TiXmlElement& element,
@@ -120,43 +101,63 @@ Global::BOOL XMLParse::IsElementObject(TiXmlElement& element,
 }
 
 Global::BOOL XMLParse::_ParseControl(TiXmlElement& element,
-    std::string strMustAttribute[],
-    std::string strOptionalAttribute[],
-    const std::string& strName,
     KControlNode* pNode)
 {
-    if (!pNode
-        || strName.empty()
-        || strMustAttribute == NULL
-        || strOptionalAttribute == NULL)
+    if (!pNode)
     {
         return FALSE;
     }
 
-    if (IsElementObject(element, strName.c_str()))
+    KControlNode* pNodeChild = pNode->AddChild();
+    TiXmlAttribute* pAttribute = element.FirstAttribute();
+
+    if (!pAttribute
+        || !pNodeChild)
     {
-        KControlNode* pNodeChild = pNode->AddChild();
-        pNodeChild->SetName(CA2W(strName.c_str()).m_psz);
+        return FALSE;
+    }
 
-        for (Global::Define::uint32 nIndex = 0;
-            nIndex < sizeof(strMustAttribute) / sizeof(std::string);
-            ++nIndex)
+    pNodeChild->SetName(CA2W(element.Value()).m_psz);
+
+    for (; pAttribute != NULL;
+        pAttribute = pAttribute->Next())
+    {
+        std::string strName(pAttribute->Name());
+        std::string strValue(pAttribute->Value());
+
+        if (strName.empty())
         {
-            std::string strValue;
-            if (!utils::GetXmlStrAttributeA(&element, strMustAttribute[nIndex].c_str(), strValue))
+            if (strValue.empty())
             {
-                return FALSE;
+                strValue = "0";
             }
-        }
 
-        for (Global::Define::uint32 nIndex = 0;
-            nIndex < sizeof(strOptionalAttribute) / sizeof(std::string);
-            ++nIndex)
-        {
-            std::string strValue;
-            utils::GetXmlStrAttributeA(&element, strOptionalAttribute[nIndex].c_str(), strValue);
-            pNodeChild->SetAttr(CA2W(strOptionalAttribute[nIndex].c_str()).m_psz, CA2W(strValue.c_str()));
+            pNodeChild->SetAttr(CA2W(strName.c_str()).m_psz,
+                CA2W(pAttribute->Value()).m_psz);
         }
+    }
+
+    if (element.FirstChildElement())
+    {
+        _ParseControlAll(element, pNodeChild);
+    }
+
+    return TRUE;
+}
+
+Global::BOOL XMLParse::_ParseControlAll(TiXmlElement& element,
+    KControlNode* pNode)
+{
+    if (!pNode)
+    {
+        return FALSE;
+    }
+
+    for (TiXmlElement* pControlObject = element.FirstChildElement();
+        pControlObject != NULL;
+        pControlObject = pControlObject->NextSiblingElement())
+    {
+        _ParseControl(element, pNode);
     }
 
     return TRUE;
