@@ -586,6 +586,22 @@
 				<Filter
 					Name="parse"
 					>
+					<File
+						RelativePath=".\ui_xml\parse\xml_parse.cpp"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\ui_xml\parse\xml_parse.h"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="produce"
@@ -743,18 +759,18 @@
 						>
 					</File>
 				</Filter>
-			</Filter>
-			<Filter
-				Name="control_tree"
-				>
-				<File
-					RelativePath=".\kcontrol_tree.cpp"
+				<Filter
+					Name="control_tree"
 					>
-				</File>
-				<File
-					RelativePath=".\kcontrol_tree.h"
-					>
-				</File>
+					<File
+						RelativePath=".\control\control_tree\kcontrol_tree.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\control\control_tree\kcontrol_tree.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 	</Files>

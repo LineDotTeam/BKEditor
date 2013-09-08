@@ -16,7 +16,7 @@
 
 interface IXmlProduce
 {
-    virtual Global::BOOL Produce(const ControlPool& controlpool,
+    virtual Global::BOOL Produce(const Control::ControlPool& controlpool,
         const std::wstring& strPath) = 0;
 };
 
