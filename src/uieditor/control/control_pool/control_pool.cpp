@@ -92,7 +92,7 @@ Global::BOOL ControlPool::Empty() const
 
 Global::Define::uint32 ControlPool::Size() const
 {
-    return m_vecControlPool.size();
+    return (Global::Define::uint32)m_vecControlPool.size();
 }
 
 }

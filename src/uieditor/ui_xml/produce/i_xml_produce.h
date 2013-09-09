@@ -12,11 +12,12 @@
 #include "include/utils.h"
 #include "include/global_def.h"
 #include "control/control_pool/control_pool.h"
+#include "control/control_tree/kcontrol_tree.h"
 #include <string>
 
 interface IXmlProduce
 {
-    virtual Global::BOOL Produce(const Control::ControlPool& controlpool,
+    virtual Global::BOOL Produce(const KControlNode& controlpool,
         const std::wstring& strPath) = 0;
 };
 

@@ -18,10 +18,15 @@ public:
 
     virtual ~UIXmlProduce();
 
-    virtual Global::BOOL Produce(const Control::ControlPool& controlpool,
+    virtual Global::BOOL Produce(const KControlNode& controltree,
         const std::wstring& strPath);
 
 private:
+    Global::BOOL _Produce(const KControlNode& controltree,
+        const std::wstring& strPath);
+
+    Global::BOOL _AddXml(const KControlNode& controltree,
+        TiXmlElement* pNode);
 };
 
 #endif // __XML_PRODUCE_UI_H_
