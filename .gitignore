@@ -24,7 +24,7 @@
 
 Debug
 win32_d
-cppunit
+Cppunit
 win32
 Release
 cppunit_win32_d
