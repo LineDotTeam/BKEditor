@@ -719,6 +719,22 @@
 				<Filter
 					Name="parse"
 					>
+					<File
+						RelativePath=".\ui_xml\parse\xml_parse.cpp"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\ui_xml\parse\xml_parse.h"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="produce"
