@@ -7,8 +7,8 @@
 
 namespace utils
 {
-    BOOL GetXmlStrAttributeA( TiXmlElement *pElement, char *pName, std::string &strData );
-    BOOL GetXmlIntAttribute( TiXmlElement *pElement, char *pName, int &nData );
+    BOOL GetXmlStrAttributeA( TiXmlElement *pElement, const char *pName, std::string &strData );
+    BOOL GetXmlIntAttribute( TiXmlElement *pElement, const char *pName, int &nData );
     template<class T>
     inline T* vector_to_array(std::vector<T>* v)
     {

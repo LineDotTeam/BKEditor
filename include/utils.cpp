@@ -4,7 +4,7 @@
 namespace utils
 {
 
-BOOL utils::GetXmlStrAttributeA( TiXmlElement *pElement, char *pName, std::string &strData )
+BOOL utils::GetXmlStrAttributeA( TiXmlElement *pElement, const char *pName, std::string &strData )
 {
     if (pElement)
     {
@@ -18,7 +18,7 @@ BOOL utils::GetXmlStrAttributeA( TiXmlElement *pElement, char *pName, std::strin
     return false;
 }
 
-BOOL utils::GetXmlIntAttribute( TiXmlElement *pElement, char *pName, int &nData )
+BOOL utils::GetXmlIntAttribute( TiXmlElement *pElement, const char *pName, int &nData )
 {
     if (pElement)
     {
