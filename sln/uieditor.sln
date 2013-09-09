@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "uieditor", "..\src\uieditor\uieditor.vcproj", "{E12BF1DB-9770-43BF-9D97-393B1A25D591}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cppunit", "..\src\cppunit\src\cppunit\cppunit.vcproj", "{3BC430F8-E7C6-4097-BCEB-F8A33E039942}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Console|Win32 = Console|Win32
@@ -16,6 +18,12 @@ Global
 		{E12BF1DB-9770-43BF-9D97-393B1A25D591}.Debug|Win32.Build.0 = Debug|Win32
 		{E12BF1DB-9770-43BF-9D97-393B1A25D591}.Release|Win32.ActiveCfg = Release|Win32
 		{E12BF1DB-9770-43BF-9D97-393B1A25D591}.Release|Win32.Build.0 = Release|Win32
+		{3BC430F8-E7C6-4097-BCEB-F8A33E039942}.Console|Win32.ActiveCfg = Release|Win32
+		{3BC430F8-E7C6-4097-BCEB-F8A33E039942}.Console|Win32.Build.0 = Release|Win32
+		{3BC430F8-E7C6-4097-BCEB-F8A33E039942}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3BC430F8-E7C6-4097-BCEB-F8A33E039942}.Debug|Win32.Build.0 = Debug|Win32
+		{3BC430F8-E7C6-4097-BCEB-F8A33E039942}.Release|Win32.ActiveCfg = Release|Win32
+		{3BC430F8-E7C6-4097-BCEB-F8A33E039942}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -24,10 +24,9 @@
 
 Debug
 win32_d
-cppunit
 win32
 Release
-Cppunit
+cppunit_win32_d
 _UpgradeReport_Files
 *.opensdf
 *.ipch
