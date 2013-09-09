@@ -172,7 +172,7 @@
 		<Configuration
 			Name="Console|Win32"
 			OutputDirectory="$(ProjectDir)/../../product/cppunit_win32_d/$(ProjectName)/"
-			IntermediateDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectDir)/../../product/cppunit_win32_d/$(ProjectName)/middle"
 			ConfigurationType="1"
 			CharacterSet="1"
 			>
