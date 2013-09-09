@@ -171,7 +171,7 @@
 		</Configuration>
 		<Configuration
 			Name="Console|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(ProjectDir)/../../product/cppunit_win32_d/$(ProjectName)/"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -194,8 +194,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../3rdparty/wtl;&quot;$(projectdir)&quot;;../../3rdparty;../../"
-				PreprocessorDefinitions="WIN32;_CONSOLE;_DEBUG;_WINDOWS"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../src/cppunit/include&quot;;../../3rdparty/wtl;&quot;$(projectdir)&quot;;../../3rdparty;../../"
+				PreprocessorDefinitions="WIN32;_CONSOLE;_DEBUG;_WINDOWS;_CPPUNIT"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -730,6 +730,14 @@
 								UsePrecompiledHeader="0"
 							/>
 						</FileConfiguration>
+						<FileConfiguration
+							Name="Console|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+							/>
+						</FileConfiguration>
 					</File>
 					<File
 						RelativePath=".\ui_xml\parse\xml_parse.h"
@@ -960,6 +968,22 @@
 						>
 					</File>
 				</Filter>
+			</Filter>
+			<Filter
+				Name="test"
+				>
+				<File
+					RelativePath=".\test\test.cpp"
+					>
+					<FileConfiguration
+						Name="Console|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
 			</Filter>
 		</Filter>
 	</Files>
