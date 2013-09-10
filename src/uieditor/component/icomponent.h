@@ -22,6 +22,9 @@
 class IComponent
 {
 public:
+    ///> @ Brief : 构造函数
+    IComponent(int nId, const std::string& strType);
+
     ///> @ Brief : 析构函数
     virtual ~IComponent();
 
@@ -31,38 +34,53 @@ public:
     ///> @ Brief : 反初始化函数
     virtual BOOL UninitComp() = 0;
 
+public:
     ///> @ Brief : 获得组件ID
-    virtual int  GetId() const;
+    int  GetId() const;
 
     ///> @ Brief : 获得组件类型
-    virtual BOOL GetCompType(std::string& strCompType) const;
+    BOOL GetCompType(std::string& strCompType) const;
 
-    ///> @ Brief : 绘制组件
-    virtual BOOL DrawComponent(CStringA& strXml);
+    ///> @ Brief : 当前属性数量
+    size_t GetAttruteSize();
 
-    ///> @ Brief : 设置组件属性
-    virtual BOOL SetCompAttrute(const std::string& cstrAttrName, const std::string& cstrAttrValue);
-    virtual BOOL SetCompAttrute(size_t nIndex, const std::string& cstrAttrValue);
+    ///> @ Brief : 获取组件位置
+    BOOL GetCompRect(RECT& rect) const;
+
+    ///> @ Brief : 设置组件位置
+    void SetCompRect(const RECT& rect);
 
     ///> @ Brief : 获得组件属性
-    virtual BOOL GetCompAttrute(const std::string& cstrAttrName, std::string& strAttrValue) const;
+    BOOL GetCompAttrute(const std::string& cstrAttrName, std::string& strAttrValue) const;
+    BOOL GetCompAttrute(size_t nIndex, std::string& strAttrValue) const;
+
+    ///> @ Brief : 设置组件属性
+    BOOL SetCompAttrute(const std::string& cstrAttrName, const std::string& cstrAttrValue);
+    BOOL SetCompAttrute(size_t nIndex, const std::string& cstrAttrValue);
+
+    ///> @ Brief : 初始化属性
+    BOOL InitAttrute(KTipEdit3* pEdit);
+
+public:
+    ///> @ Brief : 绘制组件
+    BOOL DrawComponent(CStringA& strXml);
 
     ///> @ Brief : 绘制属性
-    virtual BOOL DrawAttrute(CStringA& strXml);
-
-    ///> @ Brief : 初始化绘制属性
-    virtual BOOL InitAttrute(KTipEdit3* pEdit);
+    BOOL DrawAttrute(CStringA& strXml);
 
 protected:
-    BOOL _IsInitComp() const;    
-
     void _SetAttr2Xml(CStringA& strXML);
+
+    void _SetInit();
 
 protected:
     CBkDialogView                       m_richView;         // 对话框
-    int                                 m_nId;              // 当前组件的ID
+    int                                 m_nId;              // 组件ID
     std::string                         m_strCompType;      // 组件类型
     std::map<std::string, std::string>  m_mapAttrute;       // 属性集
+    RECT                                m_rcPos;            // 组件矩形区域
+
+    BOOL                                m_bIsInit;          // 是否初始化
 };
 
 #endif ///> __DEFINE_ICOMPONENT_H_

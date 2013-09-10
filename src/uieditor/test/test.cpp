@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #ifdef _CPPUNIT
 
 #include <cppunit/TestFixture.h>

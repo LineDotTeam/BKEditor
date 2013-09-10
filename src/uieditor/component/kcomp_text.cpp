@@ -4,6 +4,7 @@
 int KCompText::m_nTextId = 70000;
 
 KCompText::KCompText()
+    : IComponent(m_nTextId++, "text")
 {
 
 }
@@ -15,15 +16,14 @@ KCompText::~KCompText()
 
 BOOL KCompText::InitComp()
 {
-    m_strCompType = "text";
-    m_nId         = m_nTextId++;
-
     std::string strAttrTmp[MAX_PATH] = {"id", "class", "href", "height", "width", "pos", "show", "value", "tip", 
                                         "*"};
     for (size_t i = 0; strAttrTmp[i] != "*"; ++i)
     {
         m_mapAttrute.insert(std::make_pair(strAttrTmp[i], ""));
     }
+
+    _SetInit();
 
     CStringA strTmp;
     strTmp.Format("%d", m_nId);
