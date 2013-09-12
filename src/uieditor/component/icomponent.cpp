@@ -33,7 +33,7 @@ size_t IComponent::GetAttruteSize()
     return m_mapAttrute.size();
 }
 
-BOOL IComponent::GetCompRect(RECT& rect) const
+BOOL IComponent::GetCompRect(CRect& rect) const
 {
     if (m_bIsInit)
     {
@@ -41,11 +41,6 @@ BOOL IComponent::GetCompRect(RECT& rect) const
         return TRUE;
     }
     return FALSE;
-}
-
-void IComponent::SetCompRect(const RECT& rect)
-{
-    m_rcPos = rect;
 }
 
 BOOL IComponent::GetCompAttrute(const std::string& cstrAttrName, std::string& strAttrValue) const
@@ -85,20 +80,29 @@ BOOL IComponent::GetCompAttrute(size_t nIndex, std::string& strAttrValue) const
 
 BOOL IComponent::SetCompAttrute(const std::string& cstrAttrName, const std::string& cstrAttrValue)
 {
+    BOOL bIsSuccess = FALSE;
+    
     if (m_bIsInit)
     {
         std::map<std::string, std::string>::iterator iter = m_mapAttrute.find(cstrAttrName);
         if (iter != m_mapAttrute.end())
         {
             iter->second = cstrAttrValue;
-            return TRUE;
+            bIsSuccess = TRUE;
+        }
+        if (cstrAttrName == "pos")
+        {
+            _SetCompRect(cstrAttrValue);
         }
     }
-    return FALSE;
+
+    return bIsSuccess;
 }
 
 BOOL IComponent::SetCompAttrute(size_t nIndex, const std::string& cstrAttrValue)
 {
+    BOOL bIsSuccess = FALSE;
+
     if (m_bIsInit)
     {
         if (nIndex < 0 || nIndex >= m_mapAttrute.size())
@@ -113,9 +117,14 @@ BOOL IComponent::SetCompAttrute(size_t nIndex, const std::string& cstrAttrValue)
         }
 
         iter->second = cstrAttrValue;
-        return TRUE;
+        bIsSuccess = TRUE;
+
+        if (iter->first == "pos")
+        {
+            _SetCompRect(cstrAttrValue);
+        }
     }
-    return FALSE;
+    return bIsSuccess;
 }
 
 BOOL IComponent::InitAttrute(KTipEdit3* pEdit)
@@ -193,4 +202,58 @@ void IComponent::_SetAttr2Xml(CStringA& strXML)
 void IComponent::_SetInit()
 {
     m_bIsInit = TRUE;
+}
+
+void IComponent::_SetCompRect(const std::string& cstrAttrValue)
+{
+    std::string strPos[4];
+
+    size_t nLastPos = 0;
+    size_t nPos     = 0;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        strPos[i].erase();
+        nPos = cstrAttrValue.find(",", nLastPos);
+        if (nPos != -1)
+        {
+            strPos[i] = cstrAttrValue.substr(nLastPos, nPos - nLastPos);
+            nLastPos = nPos + 1;
+        }
+        else
+        {
+            strPos[i] = cstrAttrValue.substr(nLastPos, cstrAttrValue.size() - nLastPos);
+            nLastPos = cstrAttrValue.size();
+            continue;
+        }
+    }
+    
+    // ¸³Öµ
+    if (strPos[0].size() != 0)
+    {
+        m_rcPos.left = StrToIntA(strPos[0].c_str());
+    }
+
+    if (strPos[1].size() != 0)
+    {
+        m_rcPos.top = StrToIntA(strPos[1].c_str());
+    }
+
+    if (strPos[2].size() != 0)
+    {
+        m_rcPos.right = StrToIntA(strPos[2].c_str());
+    }
+    else
+    {
+        m_rcPos.right = m_rcPos.left + StrToIntA(m_mapAttrute["width"].c_str());
+    }
+
+    if (strPos[3].size() != 0)
+    {
+        m_rcPos.bottom = StrToIntA(strPos[3].c_str());
+    }
+    else
+    {
+        m_rcPos.bottom = m_rcPos.top + StrToIntA(m_mapAttrute["height"].c_str());
+    }
 }

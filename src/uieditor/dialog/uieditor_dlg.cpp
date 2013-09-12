@@ -1,21 +1,23 @@
 #include "stdafx.h"
 #include "uieditor_dlg.h"
 
-KMyWindow::KMyWindow(HINSTANCE hInstance)
-: CBkDialogImpl<KMyWindow>(XML_BK_MAIN_DEF)
+KEditDialogView::KEditDialogView(HINSTANCE hInstance)
+: CBkDialogImpl<KEditDialogView>(XML_BK_MAIN_DEF)
 , m_hInstance(hInstance)
 , m_uSelItemID(0)
 , m_pNowComp(NULL)
 , m_hIcon(NULL)
-{
-}
-
-KMyWindow::~KMyWindow()
+, m_nSelItem(-1)
 {
 
 }
 
-BOOL KMyWindow::OnInitDialog(CWindow wndFocus, LPARAM lInitParam)
+KEditDialogView::~KEditDialogView()
+{
+
+}
+
+BOOL KEditDialogView::OnInitDialog(CWindow wndFocus, LPARAM lInitParam)
 {
     _InitEdit();
     _InitList();
@@ -29,7 +31,7 @@ BOOL KMyWindow::OnInitDialog(CWindow wndFocus, LPARAM lInitParam)
     return FALSE;
 }
 
-void KMyWindow::OnUninitDialog()
+void KEditDialogView::OnUninitDialog()
 {
     if (m_hIcon != NULL)
     {
@@ -51,7 +53,7 @@ void KMyWindow::OnUninitDialog()
     EndDialog(0);
 }
 
-void KMyWindow::OnPalette()
+void KEditDialogView::OnPalette()
 {
     SetFocus();
     if (m_uSelItemID != 0)
@@ -67,20 +69,21 @@ void KMyWindow::OnPalette()
             m_pNowComp   = pCompTmp;
 
             CStringA strPos;
-            strPos.Format("%d,%d", m_nowPoint.x - LEFT_OFFSET, m_nowPoint.y - TOP_OFFSET);
+            CPoint   cPoint;
+
+            _TransfromPoint(m_nowPoint, cPoint);
+            strPos.Format("%d,%d", cPoint.x, cPoint.y);
             m_pNowComp->SetCompAttrute("pos", strPos.GetString());
         }
-        _Redraw();
     }
-    else
+    else if (m_nSelItem == -1)
     {
         m_pNowComp = NULL;
-        _RedrawAttrute();
     }
-    
+    _Redraw();
 }
 
-void KMyWindow::OnSubmit()
+void KEditDialogView::OnSubmit()
 {
     if (m_pNowComp == NULL)
     {
@@ -102,10 +105,11 @@ void KMyWindow::OnSubmit()
             break;
         }
     }
+
     _Redraw();
 }
 
-void KMyWindow::OnDelete()
+void KEditDialogView::OnDelete()
 {
     if (m_pNowComp != NULL)
     {
@@ -124,12 +128,12 @@ void KMyWindow::OnDelete()
     _Redraw();
 }
 
-void KMyWindow::OnSelectRadio(UINT uItemId)
+void KEditDialogView::OnSelectRadio(UINT uItemId)
 {
     m_uSelItemID = uItemId;
 }
 
-IComponent* KMyWindow::_CompFactory()
+IComponent* KEditDialogView::_CompFactory()
 {
     IComponent* pCompTmp = NULL;
 
@@ -159,38 +163,29 @@ IComponent* KMyWindow::_CompFactory()
     return pCompTmp;
 }
 
-void KMyWindow::OnSelectComp(UINT uItemId)
-{
-    SetFocus();
-    for (size_t i = 0; i < m_vecComp.size(); ++i)
-    {
-        if (m_vecComp[i]->GetId() == uItemId)
-        {
-            m_pNowComp = m_vecComp[i];
-            _RedrawAttrute();
-            return;
-        }
-    }
-    m_pNowComp = NULL;
-    _RedrawAttrute();
-}
-
-void KMyWindow::OnMinSize()
+void KEditDialogView::OnMinSize()
 {
     ::ShowWindow(m_hWnd, SW_SHOWMINIMIZED);
 }
 
-void KMyWindow::OnLButtonDown(UINT nFlags, CPoint point)
+void KEditDialogView::OnLButtonDown(UINT nFlags, CPoint point)
 {
-    m_nowPoint = point;
+    m_nowPoint   = point;
+    m_nSelItem = _SelectComp();
+
+    if (m_nSelItem != -1)
+    {
+        SetFocus();
+        m_pNowComp = m_vecComp[m_nSelItem];
+        _RedrawAttrute();
+    }
 }
 
-void KMyWindow::OnMouseMove(UINT nFlags, CPoint point)
+void KEditDialogView::OnMouseMove(UINT nFlags, CPoint point)
 {
     if (nFlags == MK_LBUTTON && m_pNowComp != NULL)
     {
-        m_LastPoint = m_nowPoint;
-        m_nowPoint  = point;
+        _CheckPoint(point);
 
         std::string strPos;
         std::string strLastPos;
@@ -203,7 +198,7 @@ void KMyWindow::OnMouseMove(UINT nFlags, CPoint point)
     }
 }
 
-void KMyWindow::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+void KEditDialogView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
     CPoint cPoint;
 
@@ -235,14 +230,14 @@ void KMyWindow::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     OnMouseMove(MK_LBUTTON, cPoint);
 }
 
-void KMyWindow::_Redraw()
+void KEditDialogView::_Redraw()
 {
     _RedrawComponent();
 
     _RedrawAttrute();
 }
 
-void KMyWindow::_RedrawComponent()
+void KEditDialogView::_RedrawComponent()
 {
     CStringA    strPreXml;
     CStringA    strNowXml("<text></text>");
@@ -252,10 +247,13 @@ void KMyWindow::_RedrawComponent()
         m_vecComp[i]->DrawComponent(strPreXml);
         strNowXml.Append(strPreXml);
     }
+
+    _DrawSelRect(strNowXml);
+
     SetPanelXml(MAIN_OPERATE, strNowXml.GetString());
 }
 
-void KMyWindow::_RedrawAttrute()
+void KEditDialogView::_RedrawAttrute()
 {
     CStringA    strNowXml("<text></text>");
     BOOL        bBtnVisible = FALSE;
@@ -279,7 +277,7 @@ void KMyWindow::_RedrawAttrute()
     SetItemVisible(DELETE_BUTTION, bBtnVisible);
 }
 
-void KMyWindow::_InitEdit()
+void KEditDialogView::_InitEdit()
 {
     for (int i = 0; i < ATTRUTE_SIZE; ++i)
     {
@@ -292,26 +290,22 @@ void KMyWindow::_InitEdit()
     }
 }
 
-void KMyWindow::_InitList()
+void KEditDialogView::_InitList()
 {
+
 }
 
-LRESULT KMyWindow::_OnChangeSize(UINT nFlag, WPARAM wParam, LPARAM lParam, BOOL bHandled)
-{
-    return 0;
-}
-
-void KMyWindow::_CalcMovePos(const std::string& cstrLastPos, std::string& strNowPos)
+void KEditDialogView::_CalcMovePos(const std::string& cstrLastPos, std::string& strNowPos)
 {
     std::string strPos[4];
 
-    int nLastPos = 0;
-    int nPos     = 0;
+    size_t nLastPos = 0;
+    size_t nPos     = 0;
 
     for (int i = 0; i < 4; ++i)
     {
         strPos[i].erase();
-        nPos = (int)cstrLastPos.find(",", nLastPos);
+        nPos = cstrLastPos.find(",", nLastPos);
         if (nPos != -1)
         {
             strPos[i] = cstrLastPos.substr(nLastPos, nPos - nLastPos);
@@ -320,7 +314,7 @@ void KMyWindow::_CalcMovePos(const std::string& cstrLastPos, std::string& strNow
         else
         {
             strPos[i] = cstrLastPos.substr(nLastPos, cstrLastPos.size() - nLastPos);
-            nLastPos = (int)cstrLastPos.size();
+            nLastPos = cstrLastPos.size();
             continue;
         }
     }
@@ -340,7 +334,7 @@ void KMyWindow::_CalcMovePos(const std::string& cstrLastPos, std::string& strNow
     }
 }
 
-void KMyWindow::_CalcPrePos(int nIndex, const std::string& strCmd, CStringA& strNum)
+void KEditDialogView::_CalcPrePos(int nIndex, const std::string& strCmd, CStringA& strNum)
 {
     strNum.Empty();
 
@@ -358,4 +352,71 @@ void KMyWindow::_CalcPrePos(int nIndex, const std::string& strCmd, CStringA& str
     {
         strNum.Format("%d,", nNum);
     }
+}
+
+int KEditDialogView::_SelectComp()
+{
+    CRect crect;
+    CPoint cPoint;
+    for (size_t i = 0; i < m_vecComp.size(); ++i)
+    {
+        m_vecComp[i]->GetCompRect(crect);
+        _TransfromPoint(m_nowPoint, cPoint);
+
+        if (crect.PtInRect(cPoint))
+        {
+            return (int)i;
+        }
+    }
+    return -1;
+}
+
+void KEditDialogView::_CheckPoint(const CPoint& cPnt)
+{
+    if (cPnt.x < 0  || 
+        cPnt.x > RIGHT_LIMIT - LEFT_LIMIT||
+        cPnt.y < 0   || 
+        cPnt.y > BOTTOM_LIMIT - TOP_LIMIT)
+    {
+        return;
+    }
+    m_LastPoint = m_nowPoint;
+    m_nowPoint  = cPnt;
+}
+
+void KEditDialogView::_DrawSelRect(CStringA& strNowXml)
+{
+    if (m_pNowComp != NULL)
+    {
+        CStringA strTmp;
+        CRect rect;
+        m_pNowComp->GetCompRect(rect);
+        
+        // top
+        strTmp.Format("<hr class=\"line_style\" pos=\"%d,%d,%d,%d\"/>", 
+            rect.left, rect.top, rect.right, rect.top);
+        strNowXml.Append(strTmp);
+
+        // bottom
+        strTmp.Format("<hr class=\"line_style\" pos=\"%d,%d,%d,%d\"/>", 
+            rect.left, rect.bottom, rect.right, rect.bottom);
+        strNowXml.Append(strTmp);
+
+        // left
+        strTmp.Format("<hr class=\"line_style\" pos=\"%d,%d,%d,%d\"/>", 
+            rect.left, rect.top, rect.left, rect.bottom);
+        strNowXml.Append(strTmp);
+
+        // right
+        strTmp.Format("<hr class=\"line_style\" pos=\"%d,%d,%d,%d\"/>", 
+            rect.right, rect.top, rect.right, rect.bottom);
+
+        strNowXml.Append(strTmp);
+    }
+}
+
+void KEditDialogView::_TransfromPoint(const CPoint& cPoint, CPoint& point)
+{
+    point.x = cPoint.x - LEFT_LIMIT;
+    point.y = cPoint.y - TOP_LIMIT;
 }

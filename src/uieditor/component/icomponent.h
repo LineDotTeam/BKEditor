@@ -17,6 +17,11 @@
 #define ATTRUTE_HEIGHT 35
 #define ATTRUTE_SIZE   20
 
+#define LEFT_LIMIT      200
+#define RIGHT_LIMIT     1000
+#define TOP_LIMIT       30
+#define BOTTOM_LIMIT    800
+
 ///////////////////////////////////////////////////////////////////////////
 
 class IComponent
@@ -45,10 +50,7 @@ public:
     size_t GetAttruteSize();
 
     ///> @ Brief : 获取组件位置
-    BOOL GetCompRect(RECT& rect) const;
-
-    ///> @ Brief : 设置组件位置
-    void SetCompRect(const RECT& rect);
+    BOOL GetCompRect(CRect& rect) const;
 
     ///> @ Brief : 获得组件属性
     BOOL GetCompAttrute(const std::string& cstrAttrName, std::string& strAttrValue) const;
@@ -69,6 +71,8 @@ public:
     BOOL DrawAttrute(CStringA& strXml);
 
 protected:
+    void _SetCompRect(const std::string& cstrAttrValue);
+
     void _SetAttr2Xml(CStringA& strXML);
 
     void _SetInit();
@@ -78,7 +82,7 @@ protected:
     int                                 m_nId;              // 组件ID
     std::string                         m_strCompType;      // 组件类型
     std::map<std::string, std::string>  m_mapAttrute;       // 属性集
-    RECT                                m_rcPos;            // 组件矩形区域
+    CRect                               m_rcPos;            // 组件矩形区域, 在绘制组件中的位置
 
     BOOL                                m_bIsInit;          // 是否初始化
 };

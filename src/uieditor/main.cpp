@@ -20,7 +20,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
     BkStyle::LoadStyles(XML_BK_STYLE_DEF);
     BkString::Load(XML_BK_STRING_DEF);
 
-    KMyWindow kWin(hInstance);
+    KEditDialogView kWin(hInstance);
     kWin.DoModal();
 
     return 0;

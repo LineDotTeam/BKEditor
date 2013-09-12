@@ -1,4 +1,4 @@
-<layer title="Template" height="830" width="1200" resize="1" noborder="1" appwin="1">
+<layer title="Template" height="830" width="1200" resize="1" noborder="0" appwin="0">
   <header class="header_style" height="30" width="full">
     <imgbtn id="40004" skin="btn_close" pos="-40,0"></imgbtn>
     <imgbtn id="40005" skin="btn_minsize" pos="-70,0"></imgbtn>

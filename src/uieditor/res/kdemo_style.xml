@@ -4,6 +4,7 @@
   <class name="footer_style"  crbg="DDDDDD"  skin="head_bar"></class>
   
   <class name="button_style"  cursor="hand"></class>
+  <class name="line_style"    crbg="FF0000"></class>
   
   <class name="radio_text"    font="0800"></class>
   <class name="cont_text"     font="0600"></class>

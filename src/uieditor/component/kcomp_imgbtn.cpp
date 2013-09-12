@@ -30,7 +30,7 @@ BOOL KCompImgbtn::InitComp()
 
     SetCompAttrute("value", m_strCompType);
     SetCompAttrute("crbg", "777777");
-    SetCompAttrute("height", "100");
+    SetCompAttrute("height", "30");
     SetCompAttrute("width",  "100");
     SetCompAttrute("id", strTmp.GetString());
     return TRUE;
