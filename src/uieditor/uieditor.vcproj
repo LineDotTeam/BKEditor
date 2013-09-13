@@ -912,6 +912,14 @@
 					RelativePath=".\dialog\uieditor_dlg.h"
 					>
 				</File>
+				<File
+					RelativePath=".\dialog\uieditor_logic.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\dialog\uieditor_logic.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="control"
