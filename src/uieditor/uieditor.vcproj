@@ -781,6 +781,10 @@
 				Name="component"
 				>
 				<File
+					RelativePath=".\component\component_def.h"
+					>
+				</File>
+				<File
 					RelativePath=".\component\icomponent.cpp"
 					>
 					<FileConfiguration

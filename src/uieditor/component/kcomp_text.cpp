@@ -6,7 +6,13 @@ int KCompText::m_nTextId = 70000;
 KCompText::KCompText()
     : IComponent(m_nTextId++, "text")
 {
-
+    UIEDITOR_XML_ATTRIBUTE_REGISTER_BEGIN()
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("class")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("href")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("show")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("value")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("tip")
+    UIEDITOR_XML_ATTRIBUTE_REGISTER_END()
 }
 
 KCompText::~KCompText()
@@ -16,13 +22,6 @@ KCompText::~KCompText()
 
 BOOL KCompText::InitComp()
 {
-    std::string strAttrTmp[MAX_PATH] = {"id", "class", "href", "height", "width", "pos", "show", "value", "tip", 
-                                        "*"};
-    for (size_t i = 0; strAttrTmp[i] != "*"; ++i)
-    {
-        m_mapAttrute.insert(std::make_pair(strAttrTmp[i], ""));
-    }
-
     _SetInit();
 
     CStringA strTmp;

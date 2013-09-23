@@ -6,6 +6,13 @@ IComponent::IComponent(int nId, const std::string& strType)
 , m_strCompType(strType)
 , m_bIsInit(FALSE)
 {
+    UIEDITOR_XML_ATTRIBUTE_REGISTER_BEGIN()
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("id")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("height")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("width")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("pos")
+    UIEDITOR_XML_ATTRIBUTE_REGISTER_END()
+
     m_rcPos.left   = 0;
     m_rcPos.right  = 0;
     m_rcPos.top    = 0;

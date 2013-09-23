@@ -13,6 +13,7 @@
 #include <string>
 #include <map>
 #include "bkwinres.h"
+#include "component_def.h"
 
 #define ATTRUTE_HEIGHT 35
 #define ATTRUTE_SIZE   20
