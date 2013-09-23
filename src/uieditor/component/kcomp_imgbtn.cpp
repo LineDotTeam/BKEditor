@@ -6,7 +6,19 @@ int KCompImgbtn::m_nImgbtnId = 74000;
 KCompImgbtn::KCompImgbtn()
     : IComponent(m_nImgbtnId++, "imgbtn")
 {
-
+    UIEDITOR_XML_ATTRIBUTE_REGISTER_BEGIN()
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("class")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("href")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("show")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("value")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("tip")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("crbg")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("crtext")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("font")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("valign")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("align")
+        UIEDITOR_XML_ATTRIBUTE_REGISTER_STRING("skin")
+    UIEDITOR_XML_ATTRIBUTE_REGISTER_END()
 }
 
 KCompImgbtn::~KCompImgbtn()
@@ -16,13 +28,6 @@ KCompImgbtn::~KCompImgbtn()
 
 BOOL KCompImgbtn::InitComp()
 {
-    std::string strAttrTmp[MAX_PATH] = {"id", "class", "href", "height", "width", "pos", "show", "value", "tip",
-                                        "crbg", "crtext", "font", "valign", "align", "skin", "*"};
-    for (size_t i = 0; strAttrTmp[i] != "*"; ++i)
-    {
-        m_mapAttrute.insert(std::make_pair(strAttrTmp[i], ""));
-    }
-
     _SetInit();
 
     CStringA strTmp;

@@ -13,6 +13,7 @@
 #include <string>
 #include <map>
 #include "bkwinres.h"
+#include "component_def.h"
 
 #define ATTRUTE_HEIGHT 35
 #define ATTRUTE_SIZE   20
@@ -50,7 +51,8 @@ public:
     size_t GetAttruteSize();
 
     ///> @ Brief : 获取组件位置
-    BOOL GetCompRect(CRect& rect) const;
+    BOOL GetCompRect(RECT& rect) const;
+    void SetCompRect(const RECT& rect);
 
     ///> @ Brief : 获得组件属性
     BOOL GetCompAttrute(const std::string& cstrAttrName, std::string& strAttrValue) const;
