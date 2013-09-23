@@ -207,6 +207,7 @@ void KEditDialogImpl::OnMouseMove(UINT nFlags, CPoint point)
         OutputDebugStringA(strTmp.GetString());
 
         _Redraw();
+        ::UpdateWindow(m_pEditView->m_hWnd);
     }
 }
 
