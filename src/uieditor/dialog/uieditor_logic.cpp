@@ -152,7 +152,8 @@ void KEditDialogImpl::OnLButtonDown(UINT nFlags, CPoint point)
     {
         m_pEditView->SetFocus();
         m_pNowComp = m_vecComp[m_nSelItem];
-        _RedrawAttrute();
+        _Redraw();
+        ::UpdateWindow(m_pEditView->m_hWnd);
     }
 }
 
